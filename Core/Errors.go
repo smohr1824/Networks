@@ -13,6 +13,7 @@ func (e *NetworkArgumentError) Error() string {
 	return e.message
 }
 
+//
 type NetworkArgumentNullError struct {
 	message string
 }
