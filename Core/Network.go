@@ -402,13 +402,15 @@ func (network *Network) Clone() *Network {
 
 }
 
-func (network *Network) List(writer bufio.Writer, delimiter string) {
+func (network *Network) List(writer *bufio.Writer, delimiter string) {
 	for key, targets := range network.outEdges {
 		if len(targets) == 0 {
 			writer.WriteString(key + "\n")
 		} else {
 			for to, wt := range targets {
-				writer.WriteString(key + delimiter + to + delimiter + strconv.FormatFloat(float64(wt), 'f', -1, 32) + "\n")
+				//writer.WriteString(key + delimiter + to + delimiter + strconv.FormatFloat(float64(wt), 'f', -1, 64) + "\n")
+				ln := fmt.Sprintf("%s%s%s%s%s\n",key,delimiter,to,delimiter,strconv.FormatFloat(float64(wt), 'f', -1, 32))
+				writer.WriteString(ln)
 			}
 		}
 		writer.Flush()

@@ -36,6 +36,18 @@ func (e *NetworkArgumentError) Error() string {
 	return e.message
 }
 
+type IoCreateError struct {
+	message string
+}
+func NewIoCreateError(message string) *IoCreateError {
+	return &IoCreateError{
+		message: message,
+	}
+}
+func (e *IoCreateError) Error() string {
+	return e.message
+}
+
 //
 type NetworkArgumentNullError struct {
 	message string

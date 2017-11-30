@@ -30,11 +30,11 @@ import (
 
 func main() {
 	network := Core.NewNetwork(true)
-	network.AddEdge("A", "B", 1.0)
-	network.AddEdge("B", "C", 2.0)
-	network.AddEdge("B", "D", 3.0)
-	network.AddEdge("C", "D", 2.0)
-	network.AddEdge("D", "B", 1.0)
+	network.AddEdge("A", "B", 1.1)
+	network.AddEdge("B", "C", 2.2)
+	network.AddEdge("B", "D", 3.14159)
+	network.AddEdge("C", "D", 2.4)
+	network.AddEdge("D", "B", 1.1)
 
 	err := network.AddEdge("A","A", 1.0)
 	if err != nil {
@@ -43,9 +43,22 @@ func main() {
 
 	degree, _ := network.OutDegree("B")
 	A := network.AdjacencyMatrix()
+	s := Core.NewDefaultNetworkSerializer()
+	s.WriteNetworkToFile(network, "C:\\temp\\gonetwork.dat")
+	newNet, err := s.ReadNetworkFromFile("C:\\temp\\gonetwork.dat", true)
+	_ = newNet
 	fmt.Printf("Degree of B is %d\n", degree )
 	network.RemoveEdge("C","D")
 	A = network.AdjacencyMatrix()
 	_ = A[0][0]
+
+	readNet, err := s.ReadNetworkFromFile("C:\\temp\\gonetwork2.dat", true)
+	if err != nil {
+		fmt.Printf(err.Error())
+	} else {
+		fmt.Printf("Order of read network is %d", readNet.Order())
+	}
+
+	s.WriteNetworkToFile(readNet, "C:\\temp\\gonetwork2_out.dat")
 
 }
