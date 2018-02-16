@@ -1,7 +1,5 @@
-// Copyright 2017 -- Stephen T. Mohr, OSIsoft, LLC
+// Copyright 2017 - 2018  Stephen T. Mohr, OSIsoft, LLC
 // MIT License
-
-// Copyright(c) 2017 Stephen Mohr and OSIsoft, LLC
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,12 +19,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// Basic graph/network capabilities
+
 package Core
 
 import (
 	"fmt"
 	"bufio"
 	"strconv"
+	"sort"
 )
 
 type AdjacencyList struct {
@@ -93,14 +94,19 @@ func NewNetworkFromMatrix(vertices []string, weights [][]float32, directed bool)
 }
 // public
 
-func (network *Network) Vertices() []string {
-	keys := make([]string, len(network.inEdges))
+func (network *Network) Vertices(ordered bool) []string {
+	keys := make([]string, len(network.outEdges))
 	i:=0
 	for key := range network.outEdges{
 		keys[i] = key
 		i++
 	}
-	return keys
+	if !ordered {
+		return keys
+	} else {
+		sort.Strings(keys)
+		return keys
+	}
 }
 
 func (network *Network) Directed() bool {
@@ -139,7 +145,7 @@ func (network *Network) AdjacencyMatrix() [][]float32 {
 		A = append(A, make([]float32, order))
 	}
 
-	vertices := network.Vertices()
+	vertices := network.Vertices(true)
 
 	for i := range vertices { // row = i
 		for to, wt := range network.outEdges[vertices[i]] {
