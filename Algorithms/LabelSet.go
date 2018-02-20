@@ -28,31 +28,34 @@ import (
 	"sync"
 )
 type LabelSet struct  {
-	observedLabels map[int] int
+	observedLabels sync.Map //[int] int
 	sync.RWMutex
 }
 
 type LabelObservation struct {
-	Key int
-	Value int
+	Key   interface{}
+	Value interface{}
 }
 
 func MakeLabelSet() *LabelSet {
 	set := new(LabelSet)
-	set.observedLabels = make(map[int]int)
+	//set.observedLabels = make(map[int]int)
 	return set
 }
 
 func (ls *LabelSet) Iterate() <-chan LabelObservation {
 	c := make(chan LabelObservation)
-	ls.RLock()
-	defer ls.RUnlock()
+	//ls.RLock()
+	//defer ls.RUnlock()
 	f := func() {
 		//ls.Lock()
 
-		for k, v := range ls.observedLabels {
+		//for k, v := range ls.observedLabels {
+		ls.observedLabels.Range(func(k, v interface{}) bool {
 			c <- LabelObservation{k, v}
-		}
+			return true
+			//}
+		})
 		close(c)
 		//ls.Unlock()
 	}
@@ -61,24 +64,29 @@ func (ls *LabelSet) Iterate() <-chan LabelObservation {
 }
 
 func (ls *LabelSet) SetLabel(label int, value int) {
-	ls.Lock()
-	ls.observedLabels[label] = value
-	ls.Unlock()
+	//ls.Lock()
+	//ls.observedLabels[label] = value
+	ls.observedLabels.Store(label, value)
+	//ls.Unlock()
 }
 
 func (ls *LabelSet) DeleteLabel(label int) {
 	ls.Lock()
-	delete(ls.observedLabels, label)
+	//delete(ls.observedLabels, label)
+	ls.observedLabels.Delete(label)
 	ls.Unlock()
 }
 
 func (ls *LabelSet) IncrementLabel(label int) {
-	ls.Lock()
-	count, ok := ls.observedLabels[label]
+	//ls.Lock()
+	//count, ok := ls.observedLabels[label]
+	count, ok := ls.observedLabels.Load(label)
 	if ok {
-		ls.observedLabels[label] = count + 1
+		//ls.observedLabels[label] = count + 1
+		ls.observedLabels.Store(label, count.(int)+1)
 	} else {
-		ls.observedLabels[label] = 1
+		//ls.observedLabels[label] = 1
+		ls.observedLabels.Store(label, 1)
 	}
-	ls.Unlock()
+	//ls.Unlock()
 }

@@ -25,7 +25,8 @@ package Algorithms
 
 import (
 	"math/rand"
-	"sort"
+	//"sort"
+	"sync"
 )
 type MultinomialLabels struct {
 	slots []float64
@@ -33,17 +34,24 @@ type MultinomialLabels struct {
 	labels []int
 }
 
-func NewMultinomialLabels(labelsObserved <-chan LabelObservation, seed int64) *MultinomialLabels {
+func NewMultinomialLabels(labelsObserved *sync.Map, seed int64) *MultinomialLabels {
 	multi := new(MultinomialLabels)
 
 
 	labels := make([]int, 0)
 	values := make([]int, 0)
 
-	for obs := range labelsObserved {
-		labels = append(labels, obs.Key)
-		values = append(values, obs.Value)
-	}
+	labelsObserved.Range(func(k, v interface{}) bool {
+		labels = append(labels, k.(int))
+		values = append(values, v.(int))
+		return true
+	})
+	/*for obs := range labelsObserved {
+		//labels = append(labels, obs.Key)
+		labels = append(labels, obs.Key.(int))
+		//values = append(values, obs.Value)
+		values = append(values, obs.Value.(int))
+	}*/
 
 	sum:= sumObservations(values)
 	probs := calcProbabilities(values, sum)
@@ -58,7 +66,7 @@ func NewMultinomialLabels(labelsObserved <-chan LabelObservation, seed int64) *M
 	}
 	multi.slots = bounds
 
-	sort.Ints(labels)
+	//sort.Ints(labels)
 	multi.labels = labels
 	return multi
 }
@@ -78,7 +86,7 @@ func (dist *MultinomialLabels) NextSample() int {
 
 func sumObservations(counts []int) int {
 	retVal := 0
-	for count := range counts {
+	for _, count := range counts {
 		retVal += count
 	}
 	return retVal

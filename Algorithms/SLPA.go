@@ -34,7 +34,10 @@ import (
 	"fmt"
 	"time"
 	"math/rand"
+	//"sync"
 	"sync"
+	//"math"
+
 )
 
 // message used by a goroutine to communicate which iteration it is on to the main calling routine, or for
@@ -143,7 +146,7 @@ func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int
 	// Yes, this flies in the face of the Go pattern of passing copies rather than working on one structure.
 	// However, partitions will need to access labels from nodes outside their partition, and the concurrency scheme
 	// ensures out of partition access is read-only AND synchronized such that dependency labels are correct before they are accessed.
-	nodeLabelMemory := make(map[string] LabelSet)
+	nodeLabelMemory := new(sync.Map)
 	InitLabels(&vertices, 0, order - 1, nodeLabelMemory)
 	for i:= 0; i < concurrentCount; i++ {
 		currentIteration[i] = 0
@@ -197,7 +200,7 @@ func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int
 // Performs SLPA labelling for a partition of nodes
 // Returns a list of nodes and their observed labels
 // Vertices is passed by reference to avoid copying very large arrays
-func PartitionSLPA(routineID int, G *Core.Network, vertices *[]string, boundaries PartitionBoundary, externals []string, internals []string,  seed int64, iterations int, nodeLabels map[string] LabelSet, askChannel chan <-  IterationMessage, waitChannel <- chan bool) {
+func PartitionSLPA(routineID int, G *Core.Network, vertices *[]string, boundaries PartitionBoundary, externals []string, internals []string, seed int64, iterations int, nodeLabels *sync.Map, askChannel chan<- IterationMessage, waitChannel <-chan bool) {
 	externalIndices := make([]int, len(externals)) // indices of the external nodes relative to the start of partition
 	for i := 0; i < len(externals); i++ {
 		//externalIndices[i] = indexStringInSlice(externals[i], partition)
@@ -230,69 +233,98 @@ func PartitionSLPA(routineID int, G *Core.Network, vertices *[]string, boundarie
 	}
 }
 
-func DoOneIteration(nodes *[]string, G *Core.Network, indices []int, nodeLabels map[string] LabelSet, seed int64) {
+func DoOneIteration(nodes *[]string, G *Core.Network, indices []int, nodeLabels *sync.Map, seed int64) {
 	r := rand.New(rand.NewSource(seed))
 	// rand.Perm does a pseudo-random permutation of the digits [0..len(indices)], so convert to the actual node index
 	for _, i := range r.Perm(len(indices)) {
 		nodeID := (*nodes)[indices[i]]
 		labelsSeen := make(map[int] int)
 		neighbors := G.GetNeighbors(nodeID)
-		mtx := &sync.RWMutex{}
-		mtx.Lock()
-		defer mtx.Unlock()
+		//mtx := &sync.RWMutex{}
+		//mtx.Lock()
+		//defer mtx.Unlock()
 		for neighbor, _ := range neighbors {
-			labelMap := nodeLabels[neighbor]
-
-
-
-			dist := NewMultinomialLabels(labelMap.Iterate(), seed)
-			//mtx.Unlock()
-			label := dist.NextSample()
-			count, ok := labelsSeen[label]
+			labelMap, ok := nodeLabels.Load(neighbor)
 			if ok {
-				labelsSeen[label] = count + 1
+				m := labelMap.(*sync.Map)
+				dist := NewMultinomialLabels(m, seed)
+				//mtx.Unlock()
+				label := dist.NextSample()
+				count, ok := labelsSeen[label]
+				if ok {
+					labelsSeen[label] = count + 1
 
-			} else {
-				labelsSeen[label] = 1
+				} else {
+					labelsSeen[label] = 1
+				}
 			}
 		}
 
-		maxLabel := MaxLabel(labelsSeen)
+		maxLabel := MaxLabel(labelsSeen, r)
+
+		if nodeID == "S22" {
+			num := 0
+			num++
+		}
 
 		//mtx.Lock()
-		listenerMap := nodeLabels[nodeID]
-		listenerMap.IncrementLabel(maxLabel)
-
+		listenerMap, ok := nodeLabels.Load(nodeID)
+		m := listenerMap.(*sync.Map)
+		if ok {
+			//listenerMap.IncrementLabel(maxLabel)
+			count, ok := m.Load(maxLabel)
+			if ok {
+				m.Store(maxLabel, count.(int)+1)
+			} else {
+				m.Store(maxLabel, 1)
+			}
+			//nodeLabels[nodeID] = listenerMap
+			nodeLabels.Store(nodeID, m)
+		}
 	}
 }
 
-func InitLabels(nodes *[]string, partitionStart int, partitionEnd int, observations map[string] LabelSet) {
+func InitLabels(nodes *[]string, partitionStart int, partitionEnd int, observations *sync.Map) {
 	for idx := partitionStart; idx <= partitionEnd; idx++ {
 		label := idx + partitionStart
-		labels := MakeLabelSet()
-		labels.IncrementLabel(label)
-		observations[(*nodes)[idx]] = *labels
+		labels := new(sync.Map)
+		labels.Store(label, 1)
+		observations.Store((*nodes)[idx], labels)
 	}
 }
 
 // for a map of label observations, return the label seen most often
 // This label is also the ordinal index of the node in the graphs sorted list of nodes
-func MaxLabel(labelsSeen map[int] int) int {
+func MaxLabel(labelsSeen map[int]int, r *rand.Rand) int {
 	biggestV := 0
 	biggestK := -1
+	lastV := -1
+	same := true
+	labels := make([]int, 0)
 	for k, v := range labelsSeen {
 		if v > biggestV {
 			biggestV = v
 			biggestK = k
 		}
+		if v != lastV && lastV != -1 {
+			same = false
+		}
+		lastV = v
+		labels = append(labels, k)
 	}
-	return biggestK
+	if same {
+		return labels[r.Intn(len(labelsSeen))]
+	} else {
+
+		return biggestK
+	}
 }
 
 func SumLabels(labels []LabelObservation) int {
 	retVal := 0
 	for _, label := range labels {
-		retVal += label.Value
+		//retVal += label.Value
+		retVal += label.Value.(int)
 	}
 	return retVal
 
@@ -301,44 +333,73 @@ func SumLabels(labels []LabelObservation) int {
 
 // Removes any label which does not clear the threshold (percentage of total observations), then
 // constructs a map of labels and their associated node ids
-func PostProcess(masterLabelMap map[string]LabelSet, threshold float64) map[int][]string{
-	for idx, _ := range masterLabelMap {
-		ApplyThreshold(masterLabelMap[idx], threshold)
-	}
+func PostProcess(masterLabelMap *sync.Map, threshold float64) map[int][]string {
+	masterLabelMap.Range(func(k, v interface{}) bool {
+		ApplyThreshold(v.(*sync.Map), threshold)
+		return true
+	})
+	//for idx, _ := range masterLabelMap {
+	//	ApplyThreshold(masterLabelMap[idx], threshold)
+	//}
 
-	communities := make(map[int] []string, len(masterLabelMap))
+	//communities := make(map[int] []string, len(masterLabelMap))
+	communities := make(map[int][]string)
 	// iterate through the master map of label maps and make the label the key, then append the located
 	// node id to the list associated with the label
-	for k, ls := range masterLabelMap {
-		for labelObs := range ls.Iterate() {
-			list, ok := communities[labelObs.Key]
+	//for key, ls := range masterLabelMap {
+	masterLabelMap.Range(func(key, ls interface{}) bool {
+		ls.(*sync.Map).Range(func(k, v interface{}) bool {
+			list, ok := communities[k.(int)]
+			if ok {
+				list = append(list, key.(string))
+				communities[k.(int)] = list
+			} else {
+				community := make([]string, 0)
+				community = append(community, key.(string))
+				communities[k.(int)] = community
+			}
+
+			//return true
+			//list, ok := communities[labelObs.Key]
+			/*list, ok := communities[labelObs.Key.(int)]
 			if ok {
 				list = append(list, k)
-				communities[labelObs.Key] = list
+				//communities[labelObs.Key] = list
+				communities[labelObs.Key.(int)] = list
 			} else {
 				community := make([]string, 0)
 				community = append(community, k)
-				communities[labelObs.Key] = community
-			}
-		}
-	}
+				//communities[labelObs.Key] = community
+				communities[labelObs.Key.(int)] = community
+			}*/
+			return true
+		})
+		return true
+	})
 	return communities
 }
 
-func ApplyThreshold(labelset LabelSet, threshold float64) {
-	obs := labelset.Iterate()
+func ApplyThreshold(labelset *sync.Map, threshold float64) {
+	//obs := labelset.Iterate()
 
 
 	observed := make([]LabelObservation,0)
-	for observation := range obs {
+	labelset.Range(func(k, v interface{}) bool {
+		observation := LabelObservation{Key: k.(int), Value: v.(int)}
 		observed = append(observed, observation)
-	}
+		return true
+	})
+	/*for observation := range obs {
+		observed = append(observed, observation)
+	}*/
 
 	sum := SumLabels(observed)
 	for _, observation := range observed {
 
-		if observation.Value < int(float64(sum) * threshold) {
-			labelset.DeleteLabel(observation.Key)
+		//if observation.Value < int(float64(sum) * threshold) {
+		if observation.Value.(int) < int(float64(sum)*threshold) {
+			//labelset.DeleteLabel(observation.Key)
+			labelset.Delete(observation.Key.(int))
 		}
 	}
 

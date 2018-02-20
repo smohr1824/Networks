@@ -87,7 +87,7 @@ func main() {
 	}
 
 	start := time.Now()
-	communities := Algorithms.ConcurrentSLPA(network, 20, .4, time.Now().Unix(), 3)
+	communities := Algorithms.ConcurrentSLPA(network, 20, .4, time.Now().Unix(), 4)
 	end := time.Now()
 
 	dur := end.Sub(start)
