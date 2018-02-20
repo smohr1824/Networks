@@ -18,4 +18,6 @@ Presently, the Algorithms package implements the following community detection a
 SLPA is described in Xie, Jierui and Szymanski, Boleslaw, Towards Linear Time Overlapping Community Detection in Social Networks, Proceedings of the Pacific-Asiz Conference on Knowledge Discovery and Data Mining, :25-36, 2012.
 The concurrent version is adapted from Kuzmin, Konstantin, Chen, Mingming, and Szymanski, Boleslaw, Parallelizing SLPA for Scalable Overlapping Community Detection, Scientific Programming, 2015
 
+Due to the nature of the concurrency primitives in Go and the controller architecture selecting, there is less parallelization than prescribed by Kuzmin in his algorithm.  However, speed-up is observed.
+
 Additional algorithm implementations are planned.
