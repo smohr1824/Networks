@@ -105,8 +105,8 @@ func (serializer *NetworkSerializer) writeNetwork(net *Network, writer *bufio.Wr
 
 func splitAndClean(line string, delimiter string) []string {
 	fields := strings.Split(line, delimiter)
-	len := len(fields)
-	for i:=0; i < len; i++ {
+	leng := len(fields)
+	for i:=0; i < leng; i++ {
 		fields[i] = strings.TrimSpace(fields[i])
 	}
 	return fields

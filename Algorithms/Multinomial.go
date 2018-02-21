@@ -1,4 +1,4 @@
-// Copyright 2017 - 2018 -- Stephen T. Mohr, OSIsoft, LLC
+// Copyright 2017 - 2018 Stephen T. Mohr, OSIsoft, LLC
 // MIT License
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,7 +25,6 @@ package Algorithms
 
 import (
 	"math/rand"
-	//"sort"
 	"sync"
 )
 type MultinomialLabels struct {
@@ -37,7 +36,6 @@ type MultinomialLabels struct {
 func NewMultinomialLabels(labelsObserved *sync.Map, seed int64) *MultinomialLabels {
 	multi := new(MultinomialLabels)
 
-
 	labels := make([]int, 0)
 	values := make([]int, 0)
 
@@ -46,12 +44,6 @@ func NewMultinomialLabels(labelsObserved *sync.Map, seed int64) *MultinomialLabe
 		values = append(values, v.(int))
 		return true
 	})
-	/*for obs := range labelsObserved {
-		//labels = append(labels, obs.Key)
-		labels = append(labels, obs.Key.(int))
-		//values = append(values, obs.Value)
-		values = append(values, obs.Value.(int))
-	}*/
 
 	sum:= sumObservations(values)
 	probs := calcProbabilities(values, sum)
@@ -65,8 +57,6 @@ func NewMultinomialLabels(labelsObserved *sync.Map, seed int64) *MultinomialLabe
 		bounds[i] = top + v
 	}
 	multi.slots = bounds
-
-	//sort.Ints(labels)
 	multi.labels = labels
 	return multi
 }

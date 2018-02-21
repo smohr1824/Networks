@@ -117,7 +117,7 @@ func (network *Network) Connected() bool {
 	retVal := true
 	for edges := range network.outEdges {
 		if len(edges) == 0 {
-			return false
+			retVal = false
 		}
 	}
 

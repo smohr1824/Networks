@@ -1,4 +1,4 @@
-// Copyright 2017 - 2018 -- Stephen T. Mohr, OSIsoft, LLC
+// Copyright 2017 - 2018 Stephen T. Mohr, OSIsoft, LLC
 // MIT License
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -31,13 +31,10 @@ package Algorithms
 
 import (
 	"github.com/smohr1824/Networks/Core"
-	"fmt"
+	//"fmt"
 	"time"
 	"math/rand"
-	//"sync"
 	"sync"
-	//"math"
-
 )
 
 // message used by a goroutine to communicate which iteration it is on to the main calling routine, or for
@@ -57,6 +54,11 @@ type PartitionBoundary struct {
 	LastIdx int
 }
 
+type LabelObservation struct {
+	Key   interface{}
+	Value interface{}
+}
+
 // Concurrent implementation of SLPA community detection algorithm per Kuzman, Chen, Szymanski 2015
 func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int64, concurrentCount int) map[int][]string {
 	vertices := G.Vertices(true)
@@ -66,28 +68,23 @@ func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int
 		concurrentCount = order
 	}
 	partSize := order/concurrentCount	// very important: integer division -- last partition may have up to partSize + (partSize - 1) nodes
-	//partCount := order/partSize		// last partition will include any remainder nodes
 	partCount := concurrentCount
 
 	partition := 0	// one-based index of partitions
 
 	// construct the partitions for each goroutine running concurrently
 	partitionSlices := make([][]string, partCount)
-	partitionBoundaries := make([]PartitionBoundary, partCount)
 	for i := 0; i < partCount; i++ {
-	//for i := 0; partition < partCount; i += partSize {
 		if partition < partCount - 1 {
 			// new partition, populate the slice for the old partition
 			low := i * partSize
 			high := low + partSize
 			partitionSlices[partition] = vertices[low:high]
-			partitionBoundaries[partition] = PartitionBoundary{FirstIdx: low, LastIdx: high - 1}
 			partition++
 		} else {
 				low := i * partSize
 				high := order
 				partitionSlices[partition] = vertices[low:high]
-				partitionBoundaries[partition] = PartitionBoundary{FirstIdx: low, LastIdx: high - 1}
 		}
 	}
 
@@ -153,7 +150,8 @@ func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int
 		permissionStatus[i] = false
 		goChannels[i] = make(chan bool, 1)
 
-		go PartitionSLPA(i, G, &vertices, partitionBoundaries[i], externals[i], internals[i], seed, iterations, nodeLabelMemory, canIGoChannel, goChannels[i])
+		//go PartitionSLPA(i, G, &vertices, partitionBoundaries[i], externals[i], internals[i], seed, iterations, nodeLabelMemory, canIGoChannel, goChannels[i])
+		go PartitionSLPA(i, G, &vertices, externals[i], internals[i], seed, iterations, nodeLabelMemory, canIGoChannel, goChannels[i])
 	}
 
 
@@ -165,7 +163,7 @@ func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int
 				currentIteration[permissionMsg.RoutineId] = permissionMsg.IterationNumber
 				// if the iteration is -1, the goroutine is finished, so collect the results
 				if currentIteration[permissionMsg.RoutineId] == -1 {
-					fmt.Println(fmt.Sprintf("Goroutine %d ending", permissionMsg.RoutineId))
+					//fmt.Println(fmt.Sprintf("Goroutine %d ending", permissionMsg.RoutineId))
 					activeRoutines--
 				}
 				permissionStatus[permissionMsg.RoutineId] = true
@@ -200,7 +198,7 @@ func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int
 // Performs SLPA labelling for a partition of nodes
 // Returns a list of nodes and their observed labels
 // Vertices is passed by reference to avoid copying very large arrays
-func PartitionSLPA(routineID int, G *Core.Network, vertices *[]string, boundaries PartitionBoundary, externals []string, internals []string, seed int64, iterations int, nodeLabels *sync.Map, askChannel chan<- IterationMessage, waitChannel <-chan bool) {
+func PartitionSLPA(routineID int, G *Core.Network, vertices *[]string, externals []string, internals []string, seed int64, iterations int, nodeLabels *sync.Map, askChannel chan<- IterationMessage, waitChannel <-chan bool) {
 	externalIndices := make([]int, len(externals)) // indices of the external nodes relative to the start of partition
 	for i := 0; i < len(externals); i++ {
 		//externalIndices[i] = indexStringInSlice(externals[i], partition)
@@ -240,15 +238,12 @@ func DoOneIteration(nodes *[]string, G *Core.Network, indices []int, nodeLabels 
 		nodeID := (*nodes)[indices[i]]
 		labelsSeen := make(map[int] int)
 		neighbors := G.GetNeighbors(nodeID)
-		//mtx := &sync.RWMutex{}
-		//mtx.Lock()
-		//defer mtx.Unlock()
+
 		for neighbor, _ := range neighbors {
 			labelMap, ok := nodeLabels.Load(neighbor)
 			if ok {
 				m := labelMap.(*sync.Map)
 				dist := NewMultinomialLabels(m, seed)
-				//mtx.Unlock()
 				label := dist.NextSample()
 				count, ok := labelsSeen[label]
 				if ok {
@@ -262,23 +257,15 @@ func DoOneIteration(nodes *[]string, G *Core.Network, indices []int, nodeLabels 
 
 		maxLabel := MaxLabel(labelsSeen, r)
 
-		if nodeID == "S22" {
-			num := 0
-			num++
-		}
-
-		//mtx.Lock()
 		listenerMap, ok := nodeLabels.Load(nodeID)
 		m := listenerMap.(*sync.Map)
 		if ok {
-			//listenerMap.IncrementLabel(maxLabel)
 			count, ok := m.Load(maxLabel)
 			if ok {
 				m.Store(maxLabel, count.(int)+1)
 			} else {
 				m.Store(maxLabel, 1)
 			}
-			//nodeLabels[nodeID] = listenerMap
 			nodeLabels.Store(nodeID, m)
 		}
 	}
@@ -295,6 +282,7 @@ func InitLabels(nodes *[]string, partitionStart int, partitionEnd int, observati
 
 // for a map of label observations, return the label seen most often
 // This label is also the ordinal index of the node in the graphs sorted list of nodes
+// If the labels are tied, make a random selection.
 func MaxLabel(labelsSeen map[int]int, r *rand.Rand) int {
 	biggestV := 0
 	biggestK := -1
@@ -315,7 +303,6 @@ func MaxLabel(labelsSeen map[int]int, r *rand.Rand) int {
 	if same {
 		return labels[r.Intn(len(labelsSeen))]
 	} else {
-
 		return biggestK
 	}
 }
@@ -330,7 +317,6 @@ func SumLabels(labels []LabelObservation) int {
 
 }
 
-
 // Removes any label which does not clear the threshold (percentage of total observations), then
 // constructs a map of labels and their associated node ids
 func PostProcess(masterLabelMap *sync.Map, threshold float64) map[int][]string {
@@ -338,15 +324,10 @@ func PostProcess(masterLabelMap *sync.Map, threshold float64) map[int][]string {
 		ApplyThreshold(v.(*sync.Map), threshold)
 		return true
 	})
-	//for idx, _ := range masterLabelMap {
-	//	ApplyThreshold(masterLabelMap[idx], threshold)
-	//}
 
-	//communities := make(map[int] []string, len(masterLabelMap))
 	communities := make(map[int][]string)
 	// iterate through the master map of label maps and make the label the key, then append the located
 	// node id to the list associated with the label
-	//for key, ls := range masterLabelMap {
 	masterLabelMap.Range(func(key, ls interface{}) bool {
 		ls.(*sync.Map).Range(func(k, v interface{}) bool {
 			list, ok := communities[k.(int)]
@@ -359,19 +340,6 @@ func PostProcess(masterLabelMap *sync.Map, threshold float64) map[int][]string {
 				communities[k.(int)] = community
 			}
 
-			//return true
-			//list, ok := communities[labelObs.Key]
-			/*list, ok := communities[labelObs.Key.(int)]
-			if ok {
-				list = append(list, k)
-				//communities[labelObs.Key] = list
-				communities[labelObs.Key.(int)] = list
-			} else {
-				community := make([]string, 0)
-				community = append(community, k)
-				//communities[labelObs.Key] = community
-				communities[labelObs.Key.(int)] = community
-			}*/
 			return true
 		})
 		return true
@@ -380,25 +348,17 @@ func PostProcess(masterLabelMap *sync.Map, threshold float64) map[int][]string {
 }
 
 func ApplyThreshold(labelset *sync.Map, threshold float64) {
-	//obs := labelset.Iterate()
-
-
 	observed := make([]LabelObservation,0)
 	labelset.Range(func(k, v interface{}) bool {
 		observation := LabelObservation{Key: k.(int), Value: v.(int)}
 		observed = append(observed, observation)
 		return true
 	})
-	/*for observation := range obs {
-		observed = append(observed, observation)
-	}*/
 
 	sum := SumLabels(observed)
 	for _, observation := range observed {
 
-		//if observation.Value < int(float64(sum) * threshold) {
 		if observation.Value.(int) < int(float64(sum)*threshold) {
-			//labelset.DeleteLabel(observation.Key)
 			labelset.Delete(observation.Key.(int))
 		}
 	}

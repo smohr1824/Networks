@@ -1,7 +1,5 @@
-// Copyright 2017 -- Stephen T. Mohr, OSIsoft, LLC
+// Copyright 2017 - 2018 Stephen T. Mohr, OSIsoft, LLC
 // MIT License
-
-// Copyright(c) 2017 Stephen Mohr and OSIsoft, LLC
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
