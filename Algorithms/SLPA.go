@@ -134,7 +134,7 @@ func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int
 	}
 	currentIteration := make([] int, concurrentCount)
 
-	canIGoChannel := make(chan IterationMessage, concurrentCount)	// multiplexed channel for goroutines to ask if they can proceed
+	canIGoChannel := make(chan IterationMessage, 2*concurrentCount)	// multiplexed channel for goroutines to ask if they can proceed
 	permissionStatus := make([]bool, concurrentCount)				// true if a goroutine is awaiting permission to proceed to the next iteration
 	goChannels := make([]chan bool, concurrentCount)				// one channel per goroutine to signal proceed with processing, dependencies complete
 
@@ -169,7 +169,7 @@ func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int
 				permissionStatus[permissionMsg.RoutineId] = true
 
 				// if the dependencies of this partition are ready, signal ok and change permission status to false (not pending)
-				if !DependenciesNotReady(permissionMsg.IterationNumber, dependsOnList[permissionMsg.RoutineId], currentIteration) {
+				if !DependenciesNotReady(permissionMsg.IterationNumber, dependsOnList[permissionMsg.RoutineId], currentIteration) || activeRoutines == 1 {
 					goChannels[permissionMsg.RoutineId] <- true
 					permissionStatus[permissionMsg.RoutineId] = false
 				}
@@ -239,6 +239,9 @@ func DoOneIteration(nodes *[]string, G *Core.Network, indices []int, nodeLabels 
 		labelsSeen := make(map[int] int)
 		neighbors := G.GetNeighbors(nodeID)
 
+		if len(neighbors) == 0 {
+			continue
+		}
 		for neighbor, _ := range neighbors {
 			labelMap, ok := nodeLabels.Load(neighbor)
 			if ok {
@@ -394,9 +397,18 @@ func indexStringInSlice(a string, list []string) int {
 
 func DependenciesNotReady(myiteration int, deps []int, iterations []int) bool {
 	for _, dep := range deps {
-		if myiteration - iterations[dep] > 1 {
+		if myiteration != -1 && iterations[dep] != -1 && Abs(myiteration - iterations[dep]) > 1 {
 			return true
 		}
 	}
 	return false
+}
+
+func Abs(num int) int {
+	if num < 0 {
+		return -num
+	} else {
+		return num
+	}
+
 }

@@ -25,8 +25,10 @@ import (
 	"github.com/smohr1824/Networks/Core"
 	"github.com/smohr1824/Networks/Algorithms"
 	"fmt"
+	"os"
 	//"runtime"
 	"time"
+	"strconv"
 )
 
 func main() {
@@ -35,21 +37,28 @@ func main() {
 	//fmt.Println(fmt.Sprintf("Max number of CPUs/threads to use: %d", cpuSetting))
 	//fmt.Println(fmt.Sprintf("Available CPUs/threads: %d", cpuAvailable))
 
-	sr := Core.NewDefaultNetworkSerializer()
-	network, err := sr.ReadNetworkFromFile("C:\\Users\\smohr\\GoglandProjects\\src\\github.com\\smohr1824\\Networks\\TestApp\\tenset.dat", false)
+
+	// command line args are the edge list filename, delimiter (e.g., "," for a csv file, and number of concurrent routines (partitions) to use
+	// edge list is from node delimiter to node on one line
+	csvsr := Core.NewNetworkSerializer(os.Args[2])
+	pythonnetwork, err := csvsr.ReadNetworkFromFile(os.Args[1], true)
 	if err != nil {
 		fmt.Println("Error on read")
 		return
 	}
 
+	fmt.Println(fmt.Sprintf("Read %d nodes", pythonnetwork.Order()))
 	start := time.Now()
-	communities := Algorithms.ConcurrentSLPA(network, 30, .4, time.Now().Unix(), 4)
+	procs, err := strconv.Atoi(os.Args[3])
+	if err != nil {
+		fmt.Println("Number of processors must be an integer")
+	}
+	communities := Algorithms.ConcurrentSLPA(pythonnetwork, 20, .4, time.Now().Unix(), procs)
 	end := time.Now()
 
 	dur := end.Sub(start)
 	fmt.Println(fmt.Sprintf("Duration: %f", dur.Seconds()))
 	fmt.Println(fmt.Sprintf("%d communities found", len(communities)))
-	fmt.Println(communities)
 
 }
 
