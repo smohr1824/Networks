@@ -71,7 +71,7 @@ func (serializer *NetworkSerializer) WriteNetworkToFile(net *Network, filename s
 	return nil
 }
 
-// read a network in adjacency list format
+// read a network in edge list format
 func (serializer *NetworkSerializer) readNetwork(scanner *bufio.Scanner, directed bool) *Network {
 	network := NewNetwork(directed)
 
