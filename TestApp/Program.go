@@ -26,10 +26,15 @@ import (
 	"github.com/smohr1824/Networks/Algorithms"
 	"fmt"
 	"os"
-	//"runtime"
+	"runtime"
 	"time"
 	"strconv"
+	"runtime/pprof"
+	"flag"
 )
+
+var cpuprofile = flag.String("cpuprofile", "cpu_test.prof", "write cpu profile to `file`")
+var memprofile = flag.String("memprofile", "mem_test.prof", "write memory profile to `file`")
 
 func main() {
 	//cpuSetting := runtime.GOMAXPROCS(0)
@@ -37,6 +42,18 @@ func main() {
 	//fmt.Println(fmt.Sprintf("Max number of CPUs/threads to use: %d", cpuSetting))
 	//fmt.Println(fmt.Sprintf("Available CPUs/threads: %d", cpuAvailable))
 
+
+	flag.Parse()
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			fmt.Println("could not create CPU profile: ", err)
+		}
+		if err := pprof.StartCPUProfile(f); err != nil {
+			fmt.Println("could not start CPU profile: ", err)
+		}
+		defer pprof.StopCPUProfile()
+	}
 
 	// command line args are the edge list filename, delimiter (e.g., "," for a csv file, and number of concurrent routines (partitions) to use
 	// edge list is from node delimiter to node on one line
@@ -59,6 +76,19 @@ func main() {
 	dur := end.Sub(start)
 	fmt.Println(fmt.Sprintf("Duration: %f", dur.Seconds()))
 	fmt.Println(fmt.Sprintf("%d communities found", len(communities)))
+	//fmt.Println(communities)
+
+	if *memprofile != "" {
+		f, err := os.Create(*memprofile)
+		if err != nil {
+			fmt.Println("could not create memory profile: ", err)
+		}
+		runtime.GC() // get up-to-date statistics
+		if err := pprof.WriteHeapProfile(f); err != nil {
+			fmt.Println("could not write memory profile: ", err)
+		}
+		f.Close()
+	}
 
 }
 

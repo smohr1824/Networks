@@ -33,7 +33,7 @@ type MultinomialLabels struct {
 	labels []int
 }
 
-func NewMultinomialLabels(labelsObserved *sync.Map, seed int64) *MultinomialLabels {
+func NewMultinomialLabels(labelsObserved *sync.Map, r *rand.Rand) *MultinomialLabels {
 	multi := new(MultinomialLabels)
 
 	labels := make([]int, 0)
@@ -48,7 +48,7 @@ func NewMultinomialLabels(labelsObserved *sync.Map, seed int64) *MultinomialLabe
 	sum:= sumObservations(values)
 	probs := calcProbabilities(values, sum)
 	bounds := make([]float64, len(probs))
-	multi.rand = *rand.New(rand.NewSource(seed))
+	multi.rand = *r
 	var top = 0.0
 
 

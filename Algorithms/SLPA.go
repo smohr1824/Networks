@@ -151,7 +151,7 @@ func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int
 		goChannels[i] = make(chan bool, 1)
 
 		//go PartitionSLPA(i, G, &vertices, partitionBoundaries[i], externals[i], internals[i], seed, iterations, nodeLabelMemory, canIGoChannel, goChannels[i])
-		go PartitionSLPA(i, G, &vertices, externals[i], internals[i], seed, iterations, nodeLabelMemory, canIGoChannel, goChannels[i])
+		go PartitionSLPA(i, G, &vertices, &externals[i], &internals[i], seed, iterations, nodeLabelMemory, canIGoChannel, goChannels[i])
 	}
 
 
@@ -183,7 +183,7 @@ func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int
 				}
 
 			default:
-				time.Sleep(10 * time.Millisecond)
+				time.Sleep(5 * time.Millisecond)
 		}
 	}
 	close(canIGoChannel)
@@ -198,19 +198,21 @@ func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int
 // Performs SLPA labelling for a partition of nodes
 // Returns a list of nodes and their observed labels
 // Vertices is passed by reference to avoid copying very large arrays
-func PartitionSLPA(routineID int, G *Core.Network, vertices *[]string, externals []string, internals []string, seed int64, iterations int, nodeLabels *sync.Map, askChannel chan<- IterationMessage, waitChannel <-chan bool) {
-	externalIndices := make([]int, len(externals)) // indices of the external nodes relative to the start of partition
-	for i := 0; i < len(externals); i++ {
+func PartitionSLPA(routineID int, G *Core.Network, vertices *[]string, externals *[]string, internals *[]string, seed int64, iterations int, nodeLabels *sync.Map, askChannel chan<- IterationMessage, waitChannel <-chan bool) {
+	externalIndices := make([]int, len(*externals)) // indices of the external nodes relative to the start of partition
+
+	r := rand.New(rand.NewSource(seed))
+	for i := 0; i < len(*externals); i++ {
 		//externalIndices[i] = indexStringInSlice(externals[i], partition)
-		externalIndices[i] = indexStringInSlice(externals[i], *vertices)
+		externalIndices[i] = indexStringInSlice((*externals)[i], *vertices)
 	}
-	internalIndices := make([]int, len(internals)) // indices of the internal nodes relative to the start of partition
-	for i := 0; i < len(internals); i++ {
+	internalIndices := make([]int, len(*internals)) // indices of the internal nodes relative to the start of partition
+	for i := 0; i < len(*internals); i++ {
 		//internalIndices[i] = indexStringInSlice(internals[i], partition)
-		internalIndices[i] = indexStringInSlice(internals[i], *vertices)
+		internalIndices[i] = indexStringInSlice((*internals)[i], *vertices)
 	}
 	for i := 0; i < iterations; i++ {
-		DoOneIteration(vertices, G, externalIndices, nodeLabels, seed)
+		DoOneIteration(vertices, G, &externalIndices, nodeLabels, r)
 
 		if i < iterations - 1 {
 			permissionSlip := IterationMessage{RoutineId: routineID, IterationNumber: i + 1}
@@ -218,11 +220,11 @@ func PartitionSLPA(routineID int, G *Core.Network, vertices *[]string, externals
 			<-waitChannel
 
 			// proceed with internal dependencies
-			DoOneIteration(vertices, G, internalIndices, nodeLabels, seed)
+			DoOneIteration(vertices, G, &internalIndices, nodeLabels, r)
 		} else {
 
 			// proceed with internal dependencies
-			DoOneIteration(vertices, G, internalIndices, nodeLabels, seed)
+			DoOneIteration(vertices, G, &internalIndices, nodeLabels, r)
 
 			// wait to send termination as we don't want to drop out of the control loop in main
 			terminationSlip := IterationMessage{RoutineId: routineID, IterationNumber: -1}
@@ -231,11 +233,10 @@ func PartitionSLPA(routineID int, G *Core.Network, vertices *[]string, externals
 	}
 }
 
-func DoOneIteration(nodes *[]string, G *Core.Network, indices []int, nodeLabels *sync.Map, seed int64) {
-	r := rand.New(rand.NewSource(seed))
+func DoOneIteration(nodes *[]string, G *Core.Network, indices *[]int, nodeLabels *sync.Map, r *rand.Rand) {
 	// rand.Perm does a pseudo-random permutation of the digits [0..len(indices)], so convert to the actual node index
-	for _, i := range r.Perm(len(indices)) {
-		nodeID := (*nodes)[indices[i]]
+	for _, i := range rand.Perm(len(*indices)) {
+		nodeID := (*nodes)[(*indices)[i]]
 		labelsSeen := make(map[int] int)
 		neighbors := G.GetNeighbors(nodeID)
 
@@ -246,7 +247,7 @@ func DoOneIteration(nodes *[]string, G *Core.Network, indices []int, nodeLabels 
 			labelMap, ok := nodeLabels.Load(neighbor)
 			if ok {
 				m := labelMap.(*sync.Map)
-				dist := NewMultinomialLabels(m, seed)
+				dist := NewMultinomialLabels(m, r)
 				label := dist.NextSample()
 				count, ok := labelsSeen[label]
 				if ok {
@@ -291,7 +292,7 @@ func MaxLabel(labelsSeen map[int]int, r *rand.Rand) int {
 	biggestK := -1
 	lastV := -1
 	same := true
-	labels := make([]int, 0)
+	labels := make([]int, len(labelsSeen))
 	for k, v := range labelsSeen {
 		if v > biggestV {
 			biggestV = v
