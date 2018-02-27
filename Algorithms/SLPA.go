@@ -60,7 +60,7 @@ type LabelObservation struct {
 }
 
 // Concurrent implementation of SLPA community detection algorithm per Kuzman, Chen, Szymanski 2015
-func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int64, concurrentCount int) map[int][]string {
+func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int64, concurrentCount int, minCommunitySize int) map[int][]string {
 	vertices := G.Vertices(true)
 	order := G.Order()
 	// can't have more partitions than nodes; every partition must have at least one node
@@ -190,7 +190,7 @@ func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int
 	for i:=0; i < concurrentCount; i++ {
 		close(goChannels[i])
 	}
-	return PostProcess(nodeLabelMemory, threshold)
+	return PostProcess(nodeLabelMemory, threshold, minCommunitySize)
 }
 
 
@@ -292,7 +292,7 @@ func MaxLabel(labelsSeen map[int]int, r *rand.Rand) int {
 	biggestK := -1
 	lastV := -1
 	same := true
-	labels := make([]int, len(labelsSeen))
+	labels := make([]int, 0, len(labelsSeen))
 	for k, v := range labelsSeen {
 		if v > biggestV {
 			biggestV = v
@@ -304,7 +304,7 @@ func MaxLabel(labelsSeen map[int]int, r *rand.Rand) int {
 		lastV = v
 		labels = append(labels, k)
 	}
-	if same {
+	if same && len(labels) > 1 {
 		return labels[r.Intn(len(labelsSeen))]
 	} else {
 		return biggestK
@@ -323,7 +323,7 @@ func SumLabels(labels []LabelObservation) int {
 
 // Removes any label which does not clear the threshold (percentage of total observations), then
 // constructs a map of labels and their associated node ids
-func PostProcess(masterLabelMap *sync.Map, threshold float64) map[int][]string {
+func PostProcess(masterLabelMap *sync.Map, threshold float64, minSize int) map[int][]string {
 	masterLabelMap.Range(func(k, v interface{}) bool {
 		ApplyThreshold(v.(*sync.Map), threshold)
 		return true
@@ -339,7 +339,7 @@ func PostProcess(masterLabelMap *sync.Map, threshold float64) map[int][]string {
 				list = append(list, key.(string))
 				communities[k.(int)] = list
 			} else {
-				community := make([]string, 0)
+				community := make([]string, 0, 5)
 				community = append(community, key.(string))
 				communities[k.(int)] = community
 			}
@@ -348,6 +348,17 @@ func PostProcess(masterLabelMap *sync.Map, threshold float64) map[int][]string {
 		})
 		return true
 	})
+	if minSize > 1 {
+		deletes := make([]int,0, len(communities))
+		for label, cmty := range communities {
+			if len(cmty) < minSize {
+				deletes = append(deletes, label)
+			}
+		}
+		for _, label := range deletes {
+			delete(communities, label)
+		}
+	}
 	return communities
 }
 

@@ -64,7 +64,7 @@ func NewMultinomialLabels(labelsObserved *sync.Map, r *rand.Rand) *MultinomialLa
 func (dist *MultinomialLabels) NextSample() int {
 	roll := dist.rand.Float64()
 	for i := 0; i < len(dist.slots); i++ {
-		if roll < dist.slots[i] {
+		if roll <= dist.slots[i] {
 			return dist.labels[i]
 		}
 	}
@@ -87,7 +87,7 @@ func sumObservations(counts []int) int {
 func calcProbabilities(counts []int, sum int) []float64 {
 	probs := make([]float64, len(counts))
 	idx := 0
-	for v := range counts {
+	for _, v := range counts {
 		probs[idx] = float64(v)/float64(sum)
 		idx++
 	}

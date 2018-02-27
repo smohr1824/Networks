@@ -95,8 +95,13 @@ func (serializer *NetworkSerializer) readNetwork(scanner *bufio.Scanner, directe
 			if err == nil {
 				wt = float32(wtWide)
 			}
+			network.AddEdge(fields[0], fields[1], wt)
 		}
-		network.AddEdge(fields[0], fields[1], wt)
+
+		if ct == 2 {
+			network.AddEdge(fields[0], fields[1], 1)
+		}
+
 	}
 	return network
 }
@@ -107,9 +112,12 @@ func (serializer *NetworkSerializer) writeNetwork(net *Network, writer *bufio.Wr
 
 func splitAndClean(line string, delimiter string) []string {
 	fields := strings.Split(line, delimiter)
+	retVal := make([]string, 0, len(fields))
 	leng := len(fields)
 	for i:=0; i < leng; i++ {
-		fields[i] = strings.TrimSpace(fields[i])
+		if len(strings.TrimSpace(fields[i])) > 0 {
+			retVal = append(retVal, strings.TrimSpace(fields[i]))
+		}
 	}
-	return fields
+	return retVal
 }
