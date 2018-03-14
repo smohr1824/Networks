@@ -134,7 +134,7 @@ func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int
 	}
 	currentIteration := make([] int, concurrentCount)
 
-	canIGoChannel := make(chan IterationMessage, 2*concurrentCount)	// multiplexed channel for goroutines to ask if they can proceed
+	canIGoChannel := make(chan IterationMessage, concurrentCount)	// multiplexed channel for goroutines to ask if they can proceed
 	permissionStatus := make([]bool, concurrentCount)				// true if a goroutine is awaiting permission to proceed to the next iteration
 	goChannels := make([]chan bool, concurrentCount)				// one channel per goroutine to signal proceed with processing, dependencies complete
 
@@ -183,7 +183,7 @@ func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int
 				}
 
 			default:
-				time.Sleep(5 * time.Millisecond)
+				time.Sleep(2 * time.Millisecond)
 		}
 	}
 	close(canIGoChannel)
@@ -203,12 +203,10 @@ func PartitionSLPA(routineID int, G *Core.Network, vertices *[]string, externals
 
 	r := rand.New(rand.NewSource(seed))
 	for i := 0; i < len(*externals); i++ {
-		//externalIndices[i] = indexStringInSlice(externals[i], partition)
 		externalIndices[i] = indexStringInSlice((*externals)[i], *vertices)
 	}
 	internalIndices := make([]int, len(*internals)) // indices of the internal nodes relative to the start of partition
 	for i := 0; i < len(*internals); i++ {
-		//internalIndices[i] = indexStringInSlice(internals[i], partition)
 		internalIndices[i] = indexStringInSlice((*internals)[i], *vertices)
 	}
 	for i := 0; i < iterations; i++ {
@@ -314,7 +312,6 @@ func MaxLabel(labelsSeen map[int]int, r *rand.Rand) int {
 func SumLabels(labels []LabelObservation) int {
 	retVal := 0
 	for _, label := range labels {
-		//retVal += label.Value
 		retVal += label.Value.(int)
 	}
 	return retVal
@@ -349,7 +346,7 @@ func PostProcess(masterLabelMap *sync.Map, threshold float64, minSize int) map[i
 		return true
 	})
 	if minSize > 1 {
-		deletes := make([]int,0, len(communities))
+		deletes := make([]int, 0, len(communities))
 		for label, cmty := range communities {
 			if len(cmty) < minSize {
 				deletes = append(deletes, label)

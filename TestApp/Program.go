@@ -58,7 +58,9 @@ func main() {
 	// command line args are the edge list filename, delimiter (e.g., "," for a csv file, and number of concurrent routines (partitions) to use
 	// edge list is from node delimiter to node on one line
 	csvsr := Core.NewNetworkSerializer(os.Args[2])
-	pythonnetwork, err := csvsr.ReadNetworkFromFile(os.Args[1], false)
+	pythonnetwork, err := csvsr.ReadNetworkFromFile(os.Args[1], true)
+	size := pythonnetwork.Size()
+	fmt.Println(fmt.Sprintf("Number of edges is %d", size))
 	if err != nil {
 		fmt.Println("Error on read")
 		return
@@ -70,7 +72,7 @@ func main() {
 	if err != nil {
 		fmt.Println("Number of processors must be an integer")
 	}
-	communities := Algorithms.ConcurrentSLPA(pythonnetwork, 20, .4, time.Now().Unix(), procs, 2)
+	communities := Algorithms.ConcurrentSLPA(pythonnetwork, 20, .4, 123456, procs, 2)
 	end := time.Now()
 
 	dur := end.Sub(start)

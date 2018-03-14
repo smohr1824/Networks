@@ -428,7 +428,7 @@ func (network *Network) List(writer *bufio.Writer, delimiter string) {
 
 func(network *Network) countEdges()	int {
 	edgeCt := 0
-	for neighbors := range network.outEdges {
+	for _, neighbors := range network.outEdges {
 		edgeCt += len(neighbors)
 	}
 	return edgeCt
