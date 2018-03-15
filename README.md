@@ -7,7 +7,7 @@ via NetworkSerializer struct, also in Core.
 
 ### Serialization Format
 Each line of a graph represents an edge adjacency list.  The first string is the from vertex, followed by the delimiter character, followed by,
-the to vertext, followed by the delimiter and the edge weight.  Edge weights are integers.  Graphs are assumed to be directed, unless the 
+the to vertex, followed by the delimiter and the edge weight.  Edge weights are integers.  Graphs are assumed to be directed, unless the 
 file is loaded with the directed parameter of LoadNetwork set to false.  In that case, an edge is added for the reciprocal direction.
 
 # Community detection algorithms 
