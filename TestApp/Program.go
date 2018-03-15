@@ -33,8 +33,14 @@ import (
 	"flag"
 )
 
-var cpuprofile = flag.String("cpuprofile", "cpu_test.prof", "write cpu profile to `file`")
-var memprofile = flag.String("memprofile", "mem_test.prof", "write memory profile to `file`")
+// uncomment next two to profile
+//var cpuprofile = flag.String("cpuprofile", "cpu_test.prof", "write cpu profile to `file`")
+//var memprofile = flag.String("memprofile", "mem_test.prof", "write memory profile to `file`")
+
+// uncomment next two to not profile
+var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
+var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
+
 
 func main() {
 	//cpuSetting := runtime.GOMAXPROCS(0)

@@ -63,6 +63,15 @@ type LabelObservation struct {
 func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int64, concurrentCount int, minCommunitySize int) map[int][]string {
 	vertices := G.Vertices(true)
 	order := G.Order()
+
+	// make a map for the vertices and their indices in the vertices slice (efficiency in finding the index)
+
+	vertIdx := make(map[string]int)
+	for idx, vert := range vertices {
+		vertIdx[vert] = idx
+	}
+
+
 	// can't have more partitions than nodes; every partition must have at least one node
 	if concurrentCount > order {
 		concurrentCount = order
@@ -74,15 +83,21 @@ func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int
 
 	// construct the partitions for each goroutine running concurrently
 	partitionSlices := make([][]string, partCount)
+
+	// because Go doesn't have a fast way to search a slice of strings, make a parallel array of starting (low) indices of each partition within the array of vertices
+	partitionLows := make([]int, partCount)
+
 	for i := 0; i < partCount; i++ {
 		if partition < partCount - 1 {
 			// new partition, populate the slice for the old partition
 			low := i * partSize
+			partitionLows[partition] = low
 			high := low + partSize
 			partitionSlices[partition] = vertices[low:high]
 			partition++
 		} else {
 				low := i * partSize
+				partitionLows[partition] = low
 				high := order
 				partitionSlices[partition] = vertices[low:high]
 		}
@@ -105,12 +120,14 @@ func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int
 			hasExternalDependencies := false
 			nodeNeighbors := G.GetNeighbors(nodeId)
 			for neighbor, _ := range nodeNeighbors {
-				if indexStringInSlice(neighbor, partition) == -1 {
+				indexInVertices := vertIdx[neighbor]
+				low := partitionLows[partitionIdx]
+				if indexInVertices < low || indexInVertices >= low + partSize {
 					// has neighbors external to the partition
 					hasExternalDependencies = true
 					// not in the partition, use integer division to get the partition number where it is found (dependency on the partitioning schema!)
 					// also assume that the network is consistent and neighbor really is in some partition of the network
-					indexInVertices := indexStringInSlice(neighbor, vertices)	// can optimize by skipping the current partition
+
 					foundIn := indexInVertices/partSize
 					if foundIn >= concurrentCount {
 						foundIn = concurrentCount - 1
@@ -150,8 +167,7 @@ func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int
 		permissionStatus[i] = false
 		goChannels[i] = make(chan bool, 1)
 
-		//go PartitionSLPA(i, G, &vertices, partitionBoundaries[i], externals[i], internals[i], seed, iterations, nodeLabelMemory, canIGoChannel, goChannels[i])
-		go PartitionSLPA(i, G, &vertices, &externals[i], &internals[i], seed, iterations, nodeLabelMemory, canIGoChannel, goChannels[i])
+		go PartitionSLPA(i, G, &vertices, &vertIdx, &externals[i], &internals[i], seed, iterations, nodeLabelMemory, canIGoChannel, goChannels[i])
 	}
 
 
@@ -198,16 +214,16 @@ func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int
 // Performs SLPA labelling for a partition of nodes
 // Returns a list of nodes and their observed labels
 // Vertices is passed by reference to avoid copying very large arrays
-func PartitionSLPA(routineID int, G *Core.Network, vertices *[]string, externals *[]string, internals *[]string, seed int64, iterations int, nodeLabels *sync.Map, askChannel chan<- IterationMessage, waitChannel <-chan bool) {
+func PartitionSLPA(routineID int, G *Core.Network, vertices *[]string, vIndices *map[string]int, externals *[]string, internals *[]string, seed int64, iterations int, nodeLabels *sync.Map, askChannel chan<- IterationMessage, waitChannel <-chan bool) {
 	externalIndices := make([]int, len(*externals)) // indices of the external nodes relative to the start of partition
 
 	r := rand.New(rand.NewSource(seed))
 	for i := 0; i < len(*externals); i++ {
-		externalIndices[i] = indexStringInSlice((*externals)[i], *vertices)
+		externalIndices[i] = (*vIndices)[(*externals)[i]]
 	}
 	internalIndices := make([]int, len(*internals)) // indices of the internal nodes relative to the start of partition
 	for i := 0; i < len(*internals); i++ {
-		internalIndices[i] = indexStringInSlice((*internals)[i], *vertices)
+		internalIndices[i] = (*vIndices)[(*internals)[i]]
 	}
 	for i := 0; i < iterations; i++ {
 		DoOneIteration(vertices, G, &externalIndices, nodeLabels, r)
