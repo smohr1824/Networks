@@ -135,7 +135,11 @@ func (network *Network) Density() float64 {
 }
 
 func (network *Network) Size() int {
-	return network.countEdges()
+	if network.directed {
+		return network.countEdges()
+	} else {
+		return network.countEdges()/2
+	}
 }
 
 func (network *Network) AdjacencyMatrix() [][]float32 {
