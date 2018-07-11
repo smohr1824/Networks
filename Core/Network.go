@@ -131,15 +131,16 @@ func (network *Network) Order() int {
 func (network *Network) Density() float64 {
 	edgeCt := network.countEdges()
 	order := len(network.outEdges)
-	return float64(edgeCt)/float64(order * (order - 1))
+	retVal := float64(edgeCt)/float64(order * (order - 1))
+	if (!network.Directed()) {
+		retVal = 2 * retVal
+	}
+
+	return retVal
 }
 
 func (network *Network) Size() int {
-	if network.directed {
-		return network.countEdges()
-	} else {
-		return network.countEdges()/2
-	}
+	return network.countEdges()
 }
 
 func (network *Network) AdjacencyMatrix() [][]float32 {
@@ -157,6 +158,16 @@ func (network *Network) AdjacencyMatrix() [][]float32 {
 			A[i][j] = wt
 		}
 
+	}
+
+	// Need to pick up the in edges to reflect all neighbors in an undirected network
+	if (!network.Directed()) {
+		for i := range vertices {
+			for to, wt := range network.inEdges[vertices[i]] {
+				j := indexOf(vertices, to)
+				A[i][j] = wt
+			}
+		}
 	}
 	return A
 }
@@ -231,30 +242,6 @@ func (network *Network) AddEdge(from string, to string,  weight float32) error {
 		network.inEdges[to] = newMap
 	}
 
-	// if this is an undirected network, add the reciprocal edge
-
-	if !network.directed {
-		neighbors, contained = network.outEdges[to]
-
-		// the first clause should never be hit as we added a check for the vertex above
-		if !contained {
-			neighbors = make(map[string]float32)
-			neighbors[from] = weight
-			network.outEdges[to] = neighbors
-		} else {
-			neighbors[from] = weight
-		}
-
-		_, contained = network.inEdges[from]
-		if contained {
-			network.inEdges[from][to] = weight
-		} else {
-			newMap := make(map[string]float32)
-			newMap[to] = weight
-			network.inEdges[from] = newMap
-		}
-
-	}
 	return nil
 }
 
@@ -264,23 +251,34 @@ func (network *Network) RemoveEdge(from string , to string) {
 		delete(neighbors, to)
 		delete(network.inEdges[to], from)
 
-		if !network.directed {
-			neighbors, contained := network.outEdges[to]
-			if contained {
-				delete(neighbors, from)
-			}
-			delete(network.inEdges[from], to)
-		}
 	}
 }
 
 func (network *Network) GetNeighbors(vertex string) map[string]float32 {
-	neighbors, contained := network.outEdges[vertex]
-	if !contained {
-		return make(map[string]float32)
-	} else {
-		return neighbors
+	neighborsOut, containedOut := network.outEdges[vertex]
+	neighborsIn, containedIn := network.inEdges[vertex]
+
+	lenRetVal := 0
+	if containedOut {
+		lenRetVal += len(neighborsOut)
 	}
+
+	if !network.Directed() && containedIn {
+		lenRetVal += len(neighborsIn)
+	}
+	retVal := make(map[string]float32, lenRetVal )
+
+	for to, wt := range neighborsOut {
+		retVal[to] = wt
+	}
+
+	if (!network.Directed() && containedIn) {
+		for to, wt := range neighborsIn {
+			retVal[to] = wt
+		}
+	}
+
+	return retVal
 }
 
 func (network *Network) GetSources(vertex string) map[string]float32 {
@@ -300,16 +298,43 @@ func (network *Network) HasVertex(id string) bool{
 func (network *Network) HasEdge(from string, to string) bool {
 	adjList, contained := network.outEdges[from]
 	if contained {
-	_, contained2 := adjList[to]
-	return contained2
-	} else{
+		_, contained2 := adjList[to]
+		if (contained2) {
+			return true
+		} else {
+			if !network.Directed() {
+				adjList, contained := network.inEdges[from]
+				if contained {
+					_, contained2 := adjList[to]
+					if contained2 {
+						return true
+					} else {
+						return false
+					}
+				}
+			} else {
+				return false
+			}
+		}
+	} else {
 		return false
 	}
+
+	return false
 }
 
 func(network *Network) EdgeWeight(from string, to string) float32{
 	if network.HasEdge(from, to){
-		return network.outEdges[from][to]
+		wt, contained := network.outEdges[from][to]
+		if contained {
+			return wt
+		} else {
+			if !network.Directed() {
+				return network.inEdges[from][to]
+			} else {
+				return 0.0
+			}
+		}
 	} else {
 		return 0.0
 	}
@@ -320,26 +345,17 @@ func (network *Network) Degree(vertex string) (int, error) {
 		return 0, NewNetworkArgumentError(fmt.Sprintf("Vertex %s is not a member of this network", vertex))
 	}
 
-	if network.directed {
-		// return the sum of the in and out edges
-		retVal := 0
-		_, contained := network.outEdges[vertex]
-		if contained {
-			retVal = len(network.outEdges[vertex])
-		}
-		_, contained = network.inEdges[vertex]
-		if contained {
-			retVal += len(network.inEdges[vertex])
-		}
-		return retVal, nil
-	} else {
-		_, contained := network.outEdges[vertex]
-		if !contained {
-			return 0, nil
-		} else {
-			return len(network.outEdges[vertex]), nil
-		}
+	// return the sum of the in and out edges
+	retVal := 0
+	_, contained := network.outEdges[vertex]
+	if contained {
+		retVal = len(network.outEdges[vertex])
 	}
+	_, contained = network.inEdges[vertex]
+	if contained {
+		retVal += len(network.inEdges[vertex])
+	}
+	return retVal, nil
 }
 
 func (network *Network) OutDegree(vertex string) (int, error) {
@@ -365,17 +381,16 @@ func (network *Network) InWeights(vertex string) (float32, error) {
 
 	var retVal float32 = 0.0
 
+
+	for _, val := range network.inEdges[vertex] {
+		retVal += val
+	}
 	if !network.directed {
 		for _, val := range network.outEdges[vertex] {
 			retVal += val
 		}
-		return retVal, nil
-	} else {
-		for _, val := range network.inEdges[vertex] {
-			retVal += val
-		}
-		return retVal, nil
 	}
+	return retVal, nil
 }
 
 func (network *Network) OutWeights(vertex string) (float32, error) {
@@ -387,6 +402,12 @@ func (network *Network) OutWeights(vertex string) (float32, error) {
 
 	for _, val := range network.outEdges[vertex] {
 		retVal += val
+	}
+
+	if !network.Directed() {
+		for _, val := range network.inEdges[vertex] {
+			retVal += val
+		}
 	}
 	return retVal, nil
 

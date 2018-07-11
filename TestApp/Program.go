@@ -61,6 +61,28 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
+	/* ser := Core.NewNetworkSerializer("|")
+	G, _ := ser.ReadNetworkFromFile("hasedgestest.dat", false)
+	order1 := G.Order()
+	size1 := G.Size()
+	fmt.Println(fmt.Sprintf("Vertices %d, edge %d", order1, size1))
+	if !G.HasEdge("C", "A"){
+
+ 	} else {
+ 		wt := G.EdgeWeight("C", "A")
+ 		wt = G.EdgeWeight("A", "B")
+ 		wt++
+ 		test := G.HasEdge("A", "B")
+ 		if test {}
+	}
+
+	G, _ = ser.ReadNetworkFromFile("newadjtest.dat", false)
+	neighbors := G.GetNeighbors("D")
+	k := len(neighbors)
+	k++
+	matrix := G.AdjacencyMatrix()
+	matrix[0][0] = 0 */
+
 	// command line args are the edge list filename, delimiter (e.g., "," for a csv file, and number of concurrent routines (partitions) to use
 	// edge list is from node delimiter to node on one line
 	csvsr := Core.NewNetworkSerializer(os.Args[2])
