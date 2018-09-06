@@ -447,6 +447,28 @@ func (network *Network) List(writer *bufio.Writer, delimiter string) {
 		writer.Flush()
 	}
 }
+
+func (network *Network) StartingVertex(connected bool) string {
+	retVal := ""
+
+	// map keys in Go are always randomized, so grab the first vertex with outgoing edges in the iteration
+	for key, val := range network.outEdges {
+		if (connected){
+			// if we are looking for a vertex with outgoing edges, check the length of the adjacency list
+			if len(val) > 0 {
+				retVal = key
+				break
+			}
+		} else {
+			// ...otherwise, map key iteration is randomized in Go, so return the first one
+			retVal = key
+			break
+		}
+	}
+
+	return retVal
+}
+
 // end public
 
 // utilities
