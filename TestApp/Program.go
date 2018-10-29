@@ -22,15 +22,14 @@
 package main
 
 import (
-	"github.com/smohr1824/Networks/Core"
-	"github.com/smohr1824/Networks/Algorithms"
-	"fmt"
-	"os"
-	"runtime"
-	"time"
-	"strconv"
-	"runtime/pprof"
+	"bufio"
 	"flag"
+	"fmt"
+	"github.com/smohr1824/Networks/Algorithms"
+	"github.com/smohr1824/Networks/Core"
+	"os"
+	"runtime/pprof"
+	"time"
 )
 
 // uncomment next two to profile
@@ -83,9 +82,55 @@ func main() {
 	matrix := G.AdjacencyMatrix()
 	matrix[0][0] = 0 */
 
+	//ser := Core.NewNetworkSerializer("|")
+	//G, _ := ser.ReadNetworkFromFile("bipartitetest.dat", true)
+	G := Core.NewNetwork(true)
+	for i := 0; i < 200; i++ {
+		place := fmt.Sprintf("P%d", i)
+		transition := fmt.Sprintf("T%d", i)
+
+		G.AddVertex(place)
+		G.AddVertex(transition)
+	}
+	G.AddVertex("P200")
+
+	for j:= 0; j < 200; j++ {
+		place := fmt.Sprintf("P%d", j)
+		transition := fmt.Sprintf("T%d", j)
+		G.AddEdge(place, transition, 1)
+	}
+	G.AddEdge("T199", "P200", 1)
+
+	for k:= 0; k < 199; k++ {
+		place := fmt.Sprintf("P%d", k)
+		trans := fmt.Sprintf("T%d", k + 1)
+		G.AddEdge(place, trans, 1)
+	}
+
+	for l:= 0; l < 199; l++ {
+		place := fmt.Sprintf("P%d", l + 2)
+		trans := fmt.Sprintf("T%d", l)
+		G.AddEdge(trans, place, 1)
+	}
+
+	start := time.Now()
+	numgos := 2
+	isIt, R, B := Algorithms.ConcurrentBipartite(G, numgos)
+	elapsed := time.Since(start)
+	if isIt {
+		fmt.Println(fmt.Sprintf("Is bipartite, R has %d, B has %d memebers", len(R), len(B)))
+		fmt.Println(fmt.Sprintf("Elapsed time %s using %d goroutines", elapsed, numgos))
+	} else {
+		fmt.Println("Not bipartite")
+	}
+
+	reader := bufio.NewReader(os.Stdin)
+	text, _ := reader.ReadString('\n')
+	fmt.Println(text)
+
 	// command line args are the edge list filename, delimiter (e.g., "," for a csv file, and number of concurrent routines (partitions) to use
 	// edge list is from node delimiter to node on one line
-	csvsr := Core.NewNetworkSerializer(os.Args[2])
+	/*csvsr := Core.NewNetworkSerializer(os.Args[2])
 	pythonnetwork, err := csvsr.ReadNetworkFromFile(os.Args[1], true)
 	size := pythonnetwork.Size()
 	fmt.Println(fmt.Sprintf("Number of edges is %d", size))
@@ -118,7 +163,7 @@ func main() {
 			fmt.Println("could not write memory profile: ", err)
 		}
 		f.Close()
-	}
+	}*/
 
 }
 
