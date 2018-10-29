@@ -156,7 +156,7 @@ func serviceAssignments(G *Core.Network, localAssignmentChannel <-chan coloring,
 
 		assignments := make([]coloring, len(neighbors))
 		i := 0
-		for keyddfgd := range neighbors {
+		for key := range neighbors {
 			colorassignment := coloring{key, tocolor}
 			assignments[i] = colorassignment
 			i++
