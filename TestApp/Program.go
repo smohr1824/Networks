@@ -85,36 +85,36 @@ func main() {
 	//ser := Core.NewNetworkSerializer("|")
 	//G, _ := ser.ReadNetworkFromFile("bipartitetest.dat", true)
 	G := Core.NewNetwork(true)
-	for i := 0; i < 200; i++ {
+	for i := 0; i < 2000; i++ {
 		place := fmt.Sprintf("P%d", i)
 		transition := fmt.Sprintf("T%d", i)
 
 		G.AddVertex(place)
 		G.AddVertex(transition)
 	}
-	G.AddVertex("P200")
+	G.AddVertex("P2000")
 
-	for j:= 0; j < 200; j++ {
+	for j:= 0; j < 2000; j++ {
 		place := fmt.Sprintf("P%d", j)
 		transition := fmt.Sprintf("T%d", j)
 		G.AddEdge(place, transition, 1)
 	}
-	G.AddEdge("T199", "P200", 1)
+	G.AddEdge("T1999", "P2000", 1)
 
-	for k:= 0; k < 199; k++ {
+	for k:= 0; k < 1999; k++ {
 		place := fmt.Sprintf("P%d", k)
 		trans := fmt.Sprintf("T%d", k + 1)
 		G.AddEdge(place, trans, 1)
 	}
 
-	for l:= 0; l < 199; l++ {
+	for l:= 0; l < 1999; l++ {
 		place := fmt.Sprintf("P%d", l + 2)
 		trans := fmt.Sprintf("T%d", l)
 		G.AddEdge(trans, place, 1)
 	}
 
 	start := time.Now()
-	numgos := 2
+	numgos := 4
 	isIt, R, B := Algorithms.ConcurrentBipartite(G, numgos)
 	elapsed := time.Since(start)
 	if isIt {
