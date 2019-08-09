@@ -22,14 +22,12 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"github.com/smohr1824/Networks/Algorithms"
 	"github.com/smohr1824/Networks/Core"
 	"os"
 	"runtime/pprof"
-	"time"
 )
 
 // uncomment next two to profile
@@ -60,6 +58,22 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
+	/*N := Core.NewNetwork(true)
+	N.AddEdge(1, 2, 1)
+	N.AddEdge(1, 3, 1)
+	N.AddEdge(2, 5, 2)
+	N.AddEdge(3, 4, 2)
+	N.AddEdge(5, 6, 3)
+	N.AddEdge(4, 6, 3)
+	Core.WriteNetworkToFile(N, "simple.gml")
+
+	net, err := Core.ReadNetworkFromFile("simple.gml")
+	if err != nil {
+		fmt.Println("Error reading network")
+	} else {
+		fmt.Println(fmt.Sprintf("Read network with %d nodes and size %d", net.Order(), net.Size()))
+	}*/
+
 	/* ser := Core.NewNetworkSerializer("|")
 	G, _ := ser.ReadNetworkFromFile("hasedgestest.dat", false)
 	order1 := G.Order()
@@ -82,12 +96,12 @@ func main() {
 	matrix := G.AdjacencyMatrix()
 	matrix[0][0] = 0 */
 
-	//ser := Core.NewNetworkSerializer("|")
-	//G, _ := ser.ReadNetworkFromFile("bipartitetest.dat", true)
+	/*ser := Core.NewNetworkSerializer("|")
+	G, _ := ser.ReadNetworkFromFile("bipartitetest.dat", true)
 	G := Core.NewNetwork(true)
 	for i := 0; i < 2000; i++ {
-		place := fmt.Sprintf("P%d", i)
-		transition := fmt.Sprintf("T%d", i)
+		place := fmt.Sprintf("%d", i)
+		transition := fmt.Sprintf("%d", i)
 
 		G.AddVertex(place)
 		G.AddVertex(transition)
@@ -118,7 +132,7 @@ func main() {
 	isIt, R, B := Algorithms.ConcurrentBipartite(G, numgos)
 	elapsed := time.Since(start)
 	if isIt {
-		fmt.Println(fmt.Sprintf("Is bipartite, R has %d, B has %d memebers", len(R), len(B)))
+		fmt.Println(fmt.Sprintf("Is bipartite, R has %d, B has %d members", len(R), len(B)))
 		fmt.Println(fmt.Sprintf("Elapsed time %s using %d goroutines", elapsed, numgos))
 	} else {
 		fmt.Println("Not bipartite")
@@ -126,7 +140,7 @@ func main() {
 
 	reader := bufio.NewReader(os.Stdin)
 	text, _ := reader.ReadString('\n')
-	fmt.Println(text)
+	fmt.Println(text) */
 
 	// command line args are the edge list filename, delimiter (e.g., "," for a csv file, and number of concurrent routines (partitions) to use
 	// edge list is from node delimiter to node on one line
@@ -138,7 +152,14 @@ func main() {
 		fmt.Println("Error on read")
 		return
 	}
+	ser := Core.NewNetworkSerializer("|")
+	G, err := ser.ReadNetworkFromFile("displays2.dat", false)
+	if err != nil {
+		t.Errorf("Error reading test file")
+	}
 
+	communities := Algorithms.ConcurrentSLPA(G, 20, 0.3, 3000, 1, 2)
+	t.Errorf(fmt.Sprintf("%d communities found", len(communities)))
 	fmt.Println(fmt.Sprintf("Read %d nodes", pythonnetwork.Order()))
 	start := time.Now()
 	procs, err := strconv.Atoi(os.Args[3])
@@ -164,7 +185,38 @@ func main() {
 		}
 		f.Close()
 	}*/
+// test SLPA
+	/*ser := Core.NewNetworkSerializer("|")
+	G, err := ser.ReadNetworkFromFile("displays2.dat", false)
+	if err != nil {
+		fmt.Println("Error reading test file")
+	}
 
+	communities := Algorithms.ConcurrentSLPA(G, 20, 0.3, 3000, 2, 2)
+	fmt.Println(fmt.Sprintf("%d communities found", len(communities)))
+	fmt.Println(communities)*/
+
+	// test bipartite
+	G := Core.NewNetwork(false)
+
+	for i:= 0; i < 1001; i += 2 {
+		G.AddVertex(uint32(i))
+		G.AddVertex(uint32(i + 1))
+	}
+
+	for i := 0; i < 1001; i += 2 {
+		G.AddEdge(uint32(i), uint32(i + 1), 1.0)
+	}
+	for k := 1001; k > 1; k -= 2 {
+		G.AddEdge(uint32(k), uint32(k - 3), 1.0)
+	}
+
+	isIt, R, B := Algorithms.ConcurrentBipartite(G, 4)
+	if isIt {
+		fmt.Println("Bipartite")
+		fmt.Println(fmt.Sprintf("R is %d items long", len(R)))
+		fmt.Println(fmt.Sprintf("B is %d items long", len(B)))
+	}
 }
 
 

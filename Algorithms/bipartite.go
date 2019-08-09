@@ -32,28 +32,28 @@ const (
 )
 
 type coloring struct {
-	vertex string
+	vertex uint32
 	color  uint8
 }
 
 // entry point for concurrent bipartite discovery
 // The network will only be read from, not written to
 // routineCount is the number of concurrent goroutines to use and should be approximately equal to the average degree of the network
-func ConcurrentBipartite(G *Core.Network, routineCount int) (bool, []string, []string) {
+func ConcurrentBipartite(G *Core.Network, routineCount int) (bool, []uint32, []uint32) {
 	maxSize := G.Order()
-	R := make([]string, 0, maxSize)
-	B := make([]string, 0, maxSize)
-	colorings := make(map[string]uint8, maxSize)
+	R := make([]uint32, 0, maxSize)
+	B := make([]uint32, 0, maxSize)
+	colorings := make(map[uint32]uint8, maxSize)
 
 	// worklist is the queue of vertices on the frontier (BFS)
 	worklist := DataStructures.NewQueue()
-
 	isBipartite := true
 
-	start := G.StartingVertex(true)
-	if start == "" {
+	start, err := G.StartingVertex(true)
+	if err != nil {
 		return false, nil, nil
 	}
+
 
 	// color the starting vertex and load it into the queue
 	colorings[start] = red
@@ -182,7 +182,7 @@ func serviceAssignments(G *Core.Network, localAssignmentChannel <-chan []colorin
 // if not previously seen, add to the map and add it to the work queue
 // if seen, make sure there is no conflict, but do not process further
 // If a conflict is seen, the graph is not bipartite.
-func processColorings(assignedColors []coloring, masterColors map[string]uint8, R *[]string, B *[]string, queue *DataStructures.Queue) bool {
+func processColorings(assignedColors []coloring, masterColors map[uint32]uint8, R *[]uint32, B *[]uint32, queue *DataStructures.Queue) bool {
 	filteredColorings := make([]coloring, 0, len(assignedColors))
 	for _, colored := range assignedColors {
 		color, ok := masterColors[colored.vertex]

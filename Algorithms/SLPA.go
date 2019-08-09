@@ -60,13 +60,13 @@ type LabelObservation struct {
 }
 
 // Concurrent implementation of SLPA community detection algorithm per Kuzman, Chen, Szymanski 2015
-func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int64, concurrentCount int, minCommunitySize int) map[int][]string {
+func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int64, concurrentCount int, minCommunitySize int) map[int][]uint32 {
 	vertices := G.Vertices(true)
 	order := G.Order()
 
 	// make a map for the vertices and their indices in the vertices slice (efficiency in finding the index)
 
-	vertIdx := make(map[string]int)
+	vertIdx := make(map[uint32]int)
 	for idx, vert := range vertices {
 		vertIdx[vert] = idx
 	}
@@ -82,7 +82,7 @@ func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int
 	partition := 0	// one-based index of partitions
 
 	// construct the partitions for each goroutine running concurrently
-	partitionSlices := make([][]string, partCount)
+	partitionSlices := make([][]uint32, partCount)
 
 	// because Go doesn't have a fast way to search a slice of strings, make a parallel array of starting (low) indices of each partition within the array of vertices
 	partitionLows := make([]int, partCount)
@@ -109,8 +109,8 @@ func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int
 	dependsOnList:= make([][]int, concurrentCount)
 	dependencyToList := make([][]int, concurrentCount)
 
-	internals := make([][]string, concurrentCount)	// for each partition, a list of nodes in the partition whose neighbors are wholly within the partition
-	externals := make([][]string, concurrentCount)	// for each partition, a list of nodes with external dependencies
+	internals := make([][]uint32, concurrentCount)	// for each partition, a list of nodes in the partition whose neighbors are wholly within the partition
+	externals := make([][]uint32, concurrentCount)	// for each partition, a list of nodes with external dependencies
 
 	// iterate through the partition slices and establish the list of partitions that depend on this one (dependencyToList),
 	// and the list of partitions that this one depends on (dependsOnList)
@@ -214,7 +214,7 @@ func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int
 // Performs SLPA labelling for a partition of nodes
 // Returns a list of nodes and their observed labels
 // Vertices is passed by reference to avoid copying very large arrays
-func PartitionSLPA(routineID int, G *Core.Network, vertices *[]string, vIndices *map[string]int, externals *[]string, internals *[]string, seed int64, iterations int, nodeLabels *sync.Map, askChannel chan<- IterationMessage, waitChannel <-chan bool) {
+func PartitionSLPA(routineID int, G *Core.Network, vertices *[]uint32, vIndices *map[uint32]int, externals *[]uint32, internals *[]uint32, seed int64, iterations int, nodeLabels *sync.Map, askChannel chan<- IterationMessage, waitChannel <-chan bool) {
 	externalIndices := make([]int, len(*externals)) // indices of the external nodes relative to the start of partition
 
 	r := rand.New(rand.NewSource(seed))
@@ -247,7 +247,7 @@ func PartitionSLPA(routineID int, G *Core.Network, vertices *[]string, vIndices 
 	}
 }
 
-func DoOneIteration(nodes *[]string, G *Core.Network, indices *[]int, nodeLabels *sync.Map, r *rand.Rand) {
+func DoOneIteration(nodes *[]uint32, G *Core.Network, indices *[]int, nodeLabels *sync.Map, r *rand.Rand) {
 	// rand.Perm does a pseudo-random permutation of the digits [0..len(indices)], so convert to the actual node index
 	for _, i := range rand.Perm(len(*indices)) {
 		nodeID := (*nodes)[(*indices)[i]]
@@ -289,7 +289,7 @@ func DoOneIteration(nodes *[]string, G *Core.Network, indices *[]int, nodeLabels
 	}
 }
 
-func InitLabels(nodes *[]string, partitionStart int, partitionEnd int, observations *sync.Map) {
+func InitLabels(nodes *[]uint32, partitionStart int, partitionEnd int, observations *sync.Map) {
 	for idx := partitionStart; idx <= partitionEnd; idx++ {
 		label := idx + partitionStart
 		labels := new(sync.Map)
@@ -336,24 +336,24 @@ func SumLabels(labels []LabelObservation) int {
 
 // Removes any label which does not clear the threshold (percentage of total observations), then
 // constructs a map of labels and their associated node ids
-func PostProcess(masterLabelMap *sync.Map, threshold float64, minSize int) map[int][]string {
+func PostProcess(masterLabelMap *sync.Map, threshold float64, minSize int) map[int][]uint32 {
 	masterLabelMap.Range(func(k, v interface{}) bool {
 		ApplyThreshold(v.(*sync.Map), threshold)
 		return true
 	})
 
-	communities := make(map[int][]string)
+	communities := make(map[int][]uint32)
 	// iterate through the master map of label maps and make the label the key, then append the located
 	// node id to the list associated with the label
 	masterLabelMap.Range(func(key, ls interface{}) bool {
 		ls.(*sync.Map).Range(func(k, v interface{}) bool {
 			list, ok := communities[k.(int)]
 			if ok {
-				list = append(list, key.(string))
+				list = append(list, key.(uint32))
 				communities[k.(int)] = list
 			} else {
-				community := make([]string, 0, 5)
-				community = append(community, key.(string))
+				community := make([]uint32, 0, 5)
+				community = append(community, key.(uint32))
 				communities[k.(int)] = community
 			}
 

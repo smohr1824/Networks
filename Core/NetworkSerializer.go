@@ -1,4 +1,4 @@
-// Copyright 2017 - 2018 Stephen T. Mohr
+// Copyright 2017 - 2019 Stephen T. Mohr
 // MIT License
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,10 +19,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// Serialization/deserialization of a simple graph using text-format adjacency lists
 package Core
 
 import (
+	"errors"
 	"os"
 	"fmt"
 	"strings"
@@ -53,7 +53,7 @@ func (serializer *NetworkSerializer) ReadNetworkFromFile(filename string, direct
 	}
 	defer f.Close()
 	scanner := bufio.NewScanner(f)
-	retVal := serializer.readNetwork(scanner, directed)
+	retVal, err := serializer.readNetwork(scanner, directed)
 	return retVal, err
 
 }
@@ -72,7 +72,7 @@ func (serializer *NetworkSerializer) WriteNetworkToFile(net *Network, filename s
 }
 
 // read a network in edge list format
-func (serializer *NetworkSerializer) readNetwork(scanner *bufio.Scanner, directed bool) *Network {
+func (serializer *NetworkSerializer) readNetwork(scanner *bufio.Scanner, directed bool) (*Network, error) {
 	network := NewNetwork(directed)
 
 	for scanner.Scan() {
@@ -80,7 +80,12 @@ func (serializer *NetworkSerializer) readNetwork(scanner *bufio.Scanner, directe
 		ct := len(fields)
 		if ct == 1 {
 			// vertex only, just add
-			network.AddVertex(fields[0])
+			vert, err := strconv.ParseUint(fields[0], 10, 32)
+			if err == nil {
+				network.AddVertex(uint32(vert))
+			} else {
+				return nil, errors.New("unrecognized vertex found")
+			}
 			continue;
 		}
 
@@ -94,24 +99,31 @@ func (serializer *NetworkSerializer) readNetwork(scanner *bufio.Scanner, directe
 			// if there is a parse error, go with the default of 1
 			if err == nil {
 				wt = float32(wtWide)
+			} else {
+				wt = float32(1)
 			}
-			network.AddEdge(fields[0], fields[1], wt)
+			from, err1 := strconv.ParseUint(fields[0], 10, 32)
+			to, err2 := strconv.ParseUint(fields[1], 10, 32)
+			if err1 == nil && err2 == nil {
+				network.AddEdge(uint32(from), uint32(to), wt)
+			} else {
+				return nil, errors.New("Unable to convert vertices")
+			}
 		}
 
 		if ct == 2 && fields[1] == "" {
-			network.AddVertex(fields[0])
+			vert, err := strconv.ParseUint(fields[0], 10, 32)
+			if err == nil {
+				network.AddVertex(uint32(vert))
+			}
 			continue
 		}
 
 		if ct == 2 && fields[0] == "" {
 			continue
 		}
-
-		network.AddEdge(fields[0], fields[1], 1)
-
-
 	}
-	return network
+	return network, nil
 }
 
 func (serializer *NetworkSerializer) writeNetwork(net *Network, writer *bufio.Writer) {
