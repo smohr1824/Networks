@@ -25,7 +25,7 @@ package Core
 
 import (
 	"errors"
-	"fmt"
+	. "fmt"
 	"bufio"
 	"strconv"
 	"sort"
@@ -64,7 +64,7 @@ func NewNetworkFromMatrix(vertices []uint32, weights [][]float32, directed bool)
 
 	vertexCt := len(vertices)
 	if vertexCt == 0 || vertexCt != len(weights) || vertexCt != len(weights[0]) {
-		return nil, NewNetworkArgumentError(fmt.Sprintf("Adjacency matrix must be square, have the same dimensions as the vertex list, and be non-zero; vertices count: %d, weights row count: %d, weights column count: %d", vertexCt, len(weights), len(weights[0])))
+		return nil, NewNetworkArgumentError(Sprintf("Adjacency matrix must be square, have the same dimensions as the vertex list, and be non-zero; vertices count: %d, weights row count: %d, weights column count: %d", vertexCt, len(weights), len(weights[0])))
 	}
 
 	for i:= 0; i < vertexCt; i++ {
@@ -114,7 +114,7 @@ func (network *Network) Directed() bool {
 	return network.directed
 }
 
-func (network *Network) Connected() bool {
+/* func (network *Network) Connected() bool {
 	retVal := true
 	for _, edges  := range network.inEdges {
 		if len(edges) == 0 {
@@ -123,7 +123,7 @@ func (network *Network) Connected() bool {
 	}
 
 	return retVal
-}
+} */
 
 func (network *Network) Order() int {
 	return len(network.outEdges)
@@ -199,7 +199,7 @@ func (network *Network) AddVertex(id uint32) {
 func (network *Network) RemoveVertex(id uint32) {
 	tgts, contained := network.outEdges[id]
 	if contained {
-		for to, _ := range tgts {
+		for to := range tgts {
 			delete(network.inEdges[to], id)
 		}
 		delete(network.outEdges, id)
@@ -207,7 +207,7 @@ func (network *Network) RemoveVertex(id uint32) {
 
 	srcs, contained := network.inEdges[id]
 	if contained {
-		for from, _ := range srcs {
+		for from := range srcs {
 			delete(network.outEdges[from], id)
 		}
 		delete(network.inEdges,id)
@@ -216,7 +216,7 @@ func (network *Network) RemoveVertex(id uint32) {
 
 func (network *Network) AddEdge(from uint32, to uint32,  weight float32) error {
 	if (from == to) {
-		return NewNetworkArgumentError(fmt.Sprintf("Self-edges are not permitted (vertex %s)", from))
+		return NewNetworkArgumentError(Sprintf("Self-edges are not permitted (vertex %d)", from))
 	}
 
 	if network.HasEdge(from, to) {
@@ -352,7 +352,7 @@ func(network *Network) EdgeWeight(from uint32, to uint32) float32{
 
 func (network *Network) Degree(vertex uint32) (int, error) {
 	if !network.HasVertex(vertex) {
-		return 0, NewNetworkArgumentError(fmt.Sprintf("Vertex %s is not a member of this network", vertex))
+		return 0, NewNetworkArgumentError(Sprintf("Vertex %d is not a member of this network", vertex))
 	}
 
 	// return the sum of the in and out edges
@@ -370,7 +370,7 @@ func (network *Network) Degree(vertex uint32) (int, error) {
 
 func (network *Network) OutDegree(vertex uint32) (int, error) {
 	if !network.HasVertex(vertex) {
-		return 0, NewNetworkArgumentError(fmt.Sprintf("Vertex %s is not a member of the network", vertex))
+		return 0, NewNetworkArgumentError(Sprintf("Vertex %d is not a member of the network", vertex))
 	}
 
 	return len(network.outEdges[vertex]), nil
@@ -378,7 +378,7 @@ func (network *Network) OutDegree(vertex uint32) (int, error) {
 
 func (network *Network) InDegree(vertex uint32) (int, error) {
 	if !network.HasVertex(vertex) {
-		return 0, NewNetworkArgumentError(fmt.Sprintf("Vertex %s is not a member of the network", vertex))
+		return 0, NewNetworkArgumentError(Sprintf("Vertex %d is not a member of the network", vertex))
 	}
 
 	return len(network.inEdges[vertex]), nil
@@ -386,7 +386,7 @@ func (network *Network) InDegree(vertex uint32) (int, error) {
 
 func (network *Network) InWeights(vertex uint32) (float32, error) {
 	if !network.HasVertex(vertex) {
-		return 0.0, NewNetworkArgumentError(fmt.Sprintf("Vertex %s is not part of the network", vertex))
+		return 0.0, NewNetworkArgumentError(Sprintf("Vertex %d is not part of the network", vertex))
 	}
 
 	var retVal float32 = 0.0
@@ -405,7 +405,7 @@ func (network *Network) InWeights(vertex uint32) (float32, error) {
 
 func (network *Network) OutWeights(vertex uint32) (float32, error) {
 	if !network.HasVertex(vertex) {
-		return 0.0, NewNetworkArgumentError(fmt.Sprintf("Vertex %s is not part of the network", vertex))
+		return 0.0, NewNetworkArgumentError(Sprintf("Vertex %d is not part of the network", vertex))
 	}
 
 	var retVal float32 = 0.0
@@ -446,12 +446,12 @@ func (network *Network) Clone() *Network {
 func (network *Network) List(writer *bufio.Writer, delimiter string) {
 	for key, targets := range network.outEdges {
 		if len(targets) == 0 {
-			writer.WriteString(strconv.FormatUint(uint64(key), 10) + "\n")
+			_, _ = writer.WriteString(strconv.FormatUint(uint64(key), 10) + "\n")
 		} else {
 			for to, wt := range targets {
 				//writer.WriteString(key + delimiter + to + delimiter + strconv.FormatFloat(float64(wt), 'f', -1, 64) + "\n")
-				ln := fmt.Sprintf("%d%s%d%s%s\n",key,delimiter,to,delimiter,strconv.FormatFloat(float64(wt), 'f', -1, 32))
-				writer.WriteString(ln)
+				ln := Sprintf("%d%s%d%s%s\n",key,delimiter,to,delimiter,strconv.FormatFloat(float64(wt), 'f', -1, 32))
+				_, _ = writer.WriteString(ln)
 			}
 		}
 		writer.Flush()
@@ -460,14 +460,14 @@ func (network *Network) List(writer *bufio.Writer, delimiter string) {
 
 func (network *Network) ListGML(writer *bufio.Writer, level int) error {
 	basicIndent := network.indentForLevel(level)
-	_, err:= fmt.Fprintln(writer, basicIndent + "graph [")
+	_, err:= Fprintln(writer, basicIndent + "graph [")
 	if err != nil {
 		return err
 	}
 	if network.Directed() {
-		_, err = fmt.Fprintln(writer, "\tdirected 1")
+		_, err = Fprintln(writer, "\tdirected 1")
 	} else {
-		_, err = fmt.Fprintln(writer, "\tdirected 0")
+		_, err = Fprintln(writer, "\tdirected 0")
 	}
 	if err != nil {
 		return err
@@ -480,15 +480,15 @@ func (network *Network) ListGML(writer *bufio.Writer, level int) error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintln(writer, basicIndent + "]")
+	_, _ = Fprintln(writer, basicIndent+"]")
 	return nil
 }
 
 func (network *Network) listGMLNodes(writer *bufio.Writer, indent string) error {
 	for _, v := range network.Vertices(true) {
-		fmt.Fprintln(writer, indent + "\tnode [")
-		fmt.Fprintln(writer, indent + fmt.Sprintf("\t\tid %d", v))
-		fmt.Fprintln(writer, indent + "\t]")
+		_, _ = Fprintln(writer, indent+"\tnode [")
+		_, _ = Fprintln(writer, indent+Sprintf("\t\tid %d", v))
+		_, _ = Fprintln(writer, indent + "\t]")
 	}
 	return nil
 }
@@ -496,11 +496,11 @@ func (network *Network) listGMLNodes(writer *bufio.Writer, indent string) error 
 func (network *Network) listGMLEdges(writer *bufio.Writer, indent string) error {
 	for k, v := range network.outEdges {
 		for to, wt := range v {
-			fmt.Fprintln(writer, indent + "\tedge [")
-			fmt.Fprintln(writer, indent + "\t\tsource " + fmt.Sprintf("%d", k))
-			fmt.Fprintln(writer, indent + "\t\ttarget " + fmt.Sprintf("%d", to))
-			fmt.Fprintln(writer, indent + "\t\tweight " +fmt.Sprintf("%f", wt))
-			fmt.Fprintln(writer, indent + "\t]")
+			Fprintln(writer, indent + "\tedge [")
+			Fprintln(writer, indent + "\t\tsource " + Sprintf("%d", k))
+			Fprintln(writer, indent + "\t\ttarget " + Sprintf("%d", to))
+			Fprintln(writer, indent + "\t\tweight " +Sprintf("%f", wt))
+			Fprintln(writer, indent + "\t]")
 		}
 	}
 	return nil
@@ -521,12 +521,10 @@ func (network *Network) StartingVertex(connected bool) (uint32, error) {
 			// if we are looking for a vertex with outgoing edges, check the length of the adjacency list
 			if len(val) > 0 {
 				return key, nil
-				break
 			}
 		} else {
 			// ...otherwise, map key iteration is randomized in Go, so return the first one
 			return key, nil
-			break
 		}
 	}
 
@@ -545,13 +543,4 @@ func(network *Network) countEdges()	int {
 	return edgeCt
 }
 
-func indexOf(vertexList []string, vertex string) int {
-	for k, v := range vertexList {
-		if v == vertex {
-			return k
-		}
-	}
-	return -1
-}
-
-	// end utilities
+// end utilities

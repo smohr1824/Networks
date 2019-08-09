@@ -23,7 +23,7 @@
 package Core
 
 import (
-	"fmt"
+	"math"
 	"testing"
 )
 
@@ -42,13 +42,19 @@ func TestStartingVertex(t *testing.T) {
 		t.Errorf("Expected err, saw %d", s)
 	}
 
-	N.AddEdge(4, 5, 1.0)
+	err = N.AddEdge(4, 5, 1.0)
+	if err != nil {
+		panic(err)
+	}
 	s, err = N.StartingVertex(true)
 	if s != 4 {
 		t.Errorf("Expected starting vertex of E, got %d", s)
 	}
-	N.AddEdge(0, 1, 1.0)
-	N.AddEdge(1, 2, 1.0)
+	err = N.AddEdge(0, 1, 1.0)
+	err = N.AddEdge(1, 2, 1.0)
+	if err != nil {
+		panic(err)
+	}
 
 	s, err = N.StartingVertex(true)
 	if !(s == 0 || s == 1 || s == 4){
@@ -56,28 +62,31 @@ func TestStartingVertex(t *testing.T) {
 	}
 }
 
-func TestVertextBasic(t *testing.T) {
+func TestVertexBasic(t *testing.T) {
 	N := NewNetwork(true)
 
-	N.AddEdge(1, 2, 1)
-	N.AddEdge(1, 3, 1)
-	N.AddEdge(2, 3, 2)
-	N.AddEdge(1, 4, 3)
+	err := N.AddEdge(1, 2, 1)
+	err = N.AddEdge(1, 3, 1)
+	err = N.AddEdge(2, 3, 2)
+	err = N.AddEdge(1, 4, 3)
 
+	if err != nil {
+		panic(err)
+	}
 	if N.Order() != 4 {
 		t.Errorf("Wrong number of vertices, failed Order()")
 	}
 
 	if len(N.GetNeighbors(1)) != 3 {
-		t.Errorf(fmt.Sprintf("Vertex 1 should have three neighbors, found %d", N.GetNeighbors((1))))
+		t.Errorf("Vertex 1 should have three neighbors, found %d", len(N.GetNeighbors(1)))
 	}
 
 	if !N.HasEdge(2, 3) {
-		t.Errorf("Did not find edge from 2 to 3")
+		t.Error("Did not find edge from 2 to 3")
 	}
 
 	if N.HasEdge(2, 1) {
-		t.Errorf("Found unexpected edge between 2 and 1")
+		t.Error("Found unexpected edge between 2 and 1")
 	}
 
 	n, err := N.OutDegree(1)
@@ -85,15 +94,75 @@ func TestVertextBasic(t *testing.T) {
 		t.Errorf(err.Error())
 	} else {
 		if n != 3 {
-			t.Errorf("Wrong number of out edges from vertex 1")
+			t.Error("Wrong number of out edges from vertex 1")
 		}
 	}
 
 	N.RemoveVertex(3)
 	if N.HasVertex(3) {
-		t.Errorf("Vertex 3 not removed")
+		t.Error("Vertex 3 not removed")
 	}
 	if N.HasEdge(1, 3) {
-		t.Errorf("Found edge from 1 to 3 after deleting vertex 3")
+		t.Error("Found edge from 1 to 3 after deleting vertex 3")
 	}
+}
+
+func TestSize(t *testing.T) {
+	G := makeSimple(true)
+	size := G.Size()
+	if size != 9 {
+		t.Errorf("Wrong size computed for directed network. Expected 9, got %d.", size)
+	}
+
+	G = makeSimple(false)
+	size = G.Size()
+	if size != 9 {
+		t.Errorf("Wrong size computed for undirected network. Expected 9, got %d.", size)
+	}
+}
+
+func TestDensity(t *testing.T) {
+	G := NewNetwork(true)
+	err := G.AddEdge(1, 2, 1);
+	err = G.AddEdge(1, 3, 1);
+	err = G.AddEdge(2, 3, 2);
+	err = G.AddEdge(1, 4, 3);
+
+	if err != nil {
+		panic(err)
+	}
+	density := G.Density()
+	if math.Abs((0.33 - density)) > 0.01 {
+		t.Errorf("Wrong density computed for directed graph.  Expected 0.33, got %f.", density)
+	}
+
+	G = NewNetwork(false);
+	err = G.AddEdge(1, 2, 1);
+	err = G.AddEdge(1, 3, 1);
+	err = G.AddEdge(2, 3, 2);
+	err = G.AddEdge(1, 4, 3);
+
+	if err != nil {
+		panic(err)
+	}
+	density = G.Density()
+	if math.Abs((0.66 - density)) > 0.01 {
+		t.Errorf("Wrong density computed for undirected graph.  Expected 0.66, got %f.", density)
+	}
+}
+
+func makeSimple(directed bool) *Network {
+	G := NewNetwork(directed)
+	err := G.AddEdge(1, 2, 1.0)
+	err = G.AddEdge(1, 3, 1.0)
+	err = G.AddEdge(1, 6, 1.0);
+	err = G.AddEdge(2, 4, 1.0);
+	err = G.AddEdge(4, 6, 1.0);
+	err = G.AddEdge(3, 5, 1.0);
+	err = G.AddEdge(5, 6, 1.0);
+	err = G.AddEdge(2, 5, 1.0);
+	err = G.AddEdge(3, 4, 1.0);if err != nil {
+		panic(err)
+	}
+	return G
 }
