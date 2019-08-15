@@ -89,7 +89,7 @@ func TestVertexBasic(t *testing.T) {
 		t.Error("Found unexpected edge between 2 and 1")
 	}
 
-	n, err := N.OutDegree(1)
+	n := N.OutDegree(1)
 	if err != nil {
 		t.Errorf(err.Error())
 	} else {

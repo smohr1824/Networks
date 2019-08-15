@@ -350,9 +350,9 @@ func(network *Network) EdgeWeight(from uint32, to uint32) float32{
 	}
 }
 
-func (network *Network) Degree(vertex uint32) (int, error) {
+func (network *Network) Degree(vertex uint32) int {
 	if !network.HasVertex(vertex) {
-		return 0, NewNetworkArgumentError(Sprintf("Vertex %d is not a member of this network", vertex))
+		return 0
 	}
 
 	// return the sum of the in and out edges
@@ -365,28 +365,28 @@ func (network *Network) Degree(vertex uint32) (int, error) {
 	if contained {
 		retVal += len(network.inEdges[vertex])
 	}
-	return retVal, nil
+	return retVal
 }
 
-func (network *Network) OutDegree(vertex uint32) (int, error) {
+func (network *Network) OutDegree(vertex uint32) int {
 	if !network.HasVertex(vertex) {
-		return 0, NewNetworkArgumentError(Sprintf("Vertex %d is not a member of the network", vertex))
+		return 0
 	}
 
-	return len(network.outEdges[vertex]), nil
+	return len(network.outEdges[vertex])
 }
 
-func (network *Network) InDegree(vertex uint32) (int, error) {
+func (network *Network) InDegree(vertex uint32) int {
 	if !network.HasVertex(vertex) {
-		return 0, NewNetworkArgumentError(Sprintf("Vertex %d is not a member of the network", vertex))
+		return 0
 	}
 
-	return len(network.inEdges[vertex]), nil
+	return len(network.inEdges[vertex])
 }
 
-func (network *Network) InWeights(vertex uint32) (float32, error) {
+func (network *Network) InWeights(vertex uint32) float32 {
 	if !network.HasVertex(vertex) {
-		return 0.0, NewNetworkArgumentError(Sprintf("Vertex %d is not part of the network", vertex))
+		return 0.0
 	}
 
 	var retVal float32 = 0.0
@@ -400,12 +400,12 @@ func (network *Network) InWeights(vertex uint32) (float32, error) {
 			retVal += val
 		}
 	}
-	return retVal, nil
+	return retVal
 }
 
-func (network *Network) OutWeights(vertex uint32) (float32, error) {
+func (network *Network) OutWeights(vertex uint32) float32 {
 	if !network.HasVertex(vertex) {
-		return 0.0, NewNetworkArgumentError(Sprintf("Vertex %d is not part of the network", vertex))
+		return 0.0
 	}
 
 	var retVal float32 = 0.0
@@ -419,7 +419,7 @@ func (network *Network) OutWeights(vertex uint32) (float32, error) {
 			retVal += val
 		}
 	}
-	return retVal, nil
+	return retVal
 
 }
 
