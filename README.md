@@ -5,12 +5,19 @@ Research code for working with graphs in Go, particularly concurrent algorithms
 Graphs are represented by the Network struct in the Core package.  Clusters are represented by map[int] []uint32, where the integer is a community label generated during community detection using SLPA, and each uint32 is a vertex id.  Graphs are loaded
 via NetworkSerializer struct, also in Core. 
 
+Multilayer networks are now supported by the library. Support for node and categorical coupling is provided.
+
 ### Serialization Format
 The supported serialization format is GML. A streaming, tokenized approach is now supported providing some resiliancy in the face of variations in the use of whitespace (e.g., placement of opening and closing brackets). GML arrays are not yet supported.
 Low level routines are available for extracting all properties of a list including unknown properties, but unknown properties 
-are not retained. These routines exist to support fuzzy cognitive maps.  GML support will be extended as needed by the research project.
+are not retained. These routines exist to support fuzzy cognitive maps.  GML support is provided for both monolayer and multilayer networks and will be
+the primary format for monolayer networks going forward. It is the only supported format for multilayer networks.
 
-Network serialization supports the following deprecated legacy format. Each line of a graph represents an edge adjacency list.  The first uint32 is the from vertex, followed by the delimiter character, followed by
+Multilayer networks are serialized using an unofficial extension of the published GML format. A multilayer GML document consists of the directed property, followed by one or more layer records.  Layer records contain the coordinates of the 
+layer followed by the GML serialization of the graph making up the layer.  After all layers are written, zero or more edge records are written to capture explicit interlayer edges.  Each edge contains lists for the source, target, and weight of the edge. 
+Unlike monolayer sources and targets, each node has id and coordinates properties in a list. The weight property is a simple property.
+
+Network serialization of monolayer networks supports the following deprecated legacy format. Each line of a graph represents an edge adjacency list.  The first uint32 is the from vertex, followed by the delimiter character, followed by
 the to vertex, followed by the delimiter and the edge weight.  Edge weights are floats.  Graphs are assumed to be directed, unless the 
 file is loaded with the directed parameter of LoadNetwork set to false.
 
@@ -27,4 +34,4 @@ Due to the nature of the concurrency primitives in Go and the controller archite
 Additional algorithm implementations are planned.
 
 # Other Algorithms
-ConcurrentBipartite tests a network for bipartness.  If successful, the two sets of vertices are returned as uint32[] where the uint32 is the vertex id.
+ConcurrentBipartite tests a network for biparteness.  If successful, the two sets of vertices are returned as uint32[] where the uint32 is the vertex id.

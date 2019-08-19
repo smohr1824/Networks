@@ -41,12 +41,14 @@ type MultilayerNetwork struct {
 func NewMultilayerNetwork(aspects []string, indices[][]string, isdirected bool) *MultilayerNetwork {
 	p := new(MultilayerNetwork)
 	p.directed = isdirected
-	p.aspects = make([]string, len(aspects))
-	p.indices = make([][]string, len(aspects))
-	for i := 0; i < len(aspects); i ++ {
-		p.aspects[i] = aspects[i]
-		for k, idxs := range indices {
-			p.indices[k] = idxs
+	if aspects != nil && indices != nil {
+		p.aspects = make([]string, len(aspects))
+		p.indices = make([][]string, len(aspects))
+		for i := 0; i < len(aspects); i++ {
+			p.aspects[i] = aspects[i]
+			for k, idxs := range indices {
+				p.indices[k] = idxs
+			}
 		}
 	}
 	p.elementaryLayers = make(map[string] *elementaryLayer)

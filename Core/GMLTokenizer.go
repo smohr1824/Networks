@@ -23,8 +23,8 @@ package Core
 
 import (
 	"bufio"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 type GMLTokenizer struct {

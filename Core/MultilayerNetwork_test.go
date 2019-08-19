@@ -28,7 +28,7 @@ import (
 )
 
 func TestBasicMultilayer(t *testing.T) {
-	ser := NewNetworkSerializer("|")
+	/*ser := NewNetworkSerializer("|")
 	G, err := ser.ReadNetworkFromFile("electrical.dat", true)
 	if err != nil {
 		t.Errorf(err.Error())
@@ -53,16 +53,16 @@ func TestBasicMultilayer(t *testing.T) {
 	L, err := ser.ReadNetworkFromFile("control.dat", true)
 	if err != nil {
 		t.Errorf(err.Error())
-	}
+	}*/
 
 	procIndices := []string {"electrical", "flow", "control"}
 	locIndices := []string {"PHL", "SLTC"}
 	allIndices := make([][]string, 2)
 	allIndices[0] = procIndices
 	allIndices[1] = locIndices
-	aspects := []string {"process", "site"}
+	//aspects := []string {"process", "site"}
 
-	Q := NewMultilayerNetwork(aspects, allIndices, true)
+	/*Q := NewMultilayerNetwork(aspects, allIndices, true)
 
 	// add elementary layers
 	added, err := Q.AddElementaryLayer("electrical,PHL", G)
@@ -112,8 +112,14 @@ func TestBasicMultilayer(t *testing.T) {
 	added, err = Q.AddEdge(*NewNodeLayerTuple(7,"fusion,SLTC"), *NewNodeLayerTuple(8, "fusion,SLTC"), 1)
 	if added {
 		t.Error("Added edge between non-existent vertices in non-existent elementary layers")
+	} */
+
+	Q, err := ReadMultilayerNetworkFromFile("multilayer_test.gml")
+	if err != nil {
+		t.Error(err.Error())
 	}
 
+	//WriteMultilayerNetworkToFile(Q, "multilayer_test.gml")
 	ct := Q.Order()
 	if ct != 5 {
 		t.Errorf("Expected order of 5, got %d", ct)

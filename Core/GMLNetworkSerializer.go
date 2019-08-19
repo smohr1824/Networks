@@ -143,11 +143,11 @@ func processGraph(reader *bufio.Reader) (*Network, error) {
 					return nil, errors.New("Edge record found out of order in file")
 				}
 
-		case "]":
-			unfinished = false
+			case "]":
+				unfinished = false
 
-		default:
-			gmlTokenizer.ConsumeUnknownValue(reader)
+			default:
+				gmlTokenizer.ConsumeUnknownValue(reader)
 
 		}
 	}

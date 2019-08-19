@@ -465,9 +465,9 @@ func (network *Network) ListGML(writer *bufio.Writer, level int) error {
 		return err
 	}
 	if network.Directed() {
-		_, err = Fprintln(writer, "\tdirected 1")
+		_, err = Fprintln(writer, basicIndent + "\tdirected 1")
 	} else {
-		_, err = Fprintln(writer, "\tdirected 0")
+		_, err = Fprintln(writer, basicIndent + "\tdirected 0")
 	}
 	if err != nil {
 		return err
