@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"github.com/smohr1824/Networks/Algorithms"
 	"github.com/smohr1824/Networks/Core"
+	"github.com/smohr1824/Networks/FuzzyCognitiveMap"
 	"os"
 	"runtime/pprof"
 )
@@ -196,6 +197,22 @@ func main() {
 	fmt.Println(fmt.Sprintf("%d communities found", len(communities)))
 	fmt.Println(communities)*/
 
+	fcm := NewFuzzyCognitiveMapDefault()
+	fcm.AddConcept("A", 1.0, 1.0)
+	fcm.AddConcept("B", 0.0, 0.0)
+	fcm.AddConcept("C", 1.0, 1.0)
+	fcm.AddConcept("D", 0.0, 0.0)
+	fcm.AddConcept("E", 0.0, 0.0)
+
+	fcm.AddInfluence("B", "A", 1.0)
+	fcm.AddInfluence("A", "C", 1.0)
+	fcm.AddInfluence("C", "E", 1.0)
+	fcm.AddInfluence("E", "D", 1.0)
+	fcm.AddInfluence("D", "C", -1.0)
+	fcm.AddInfluence("B", "E", -1.0)
+	fcm.AddInfluence("E", "A", -1.0)
+	fcm.AddInfluence("D", "B", 1.0)
+	fcm.AddInfluence("E", "F", -1.0)
 	// test bipartite
 	G := Core.NewNetwork(false)
 

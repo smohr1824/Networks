@@ -472,11 +472,11 @@ func (network *Network) ListGML(writer *bufio.Writer, level int) error {
 	if err != nil {
 		return err
 	}
-	err = network.listGMLNodes(writer, basicIndent)
+	err = network.ListGMLNodes(writer, basicIndent)
 	if (err != nil) {
 		return err
 	}
-	err = network.listGMLEdges(writer, basicIndent)
+	err = network.ListGMLEdges(writer, basicIndent)
 	if err != nil {
 		return err
 	}
@@ -484,7 +484,7 @@ func (network *Network) ListGML(writer *bufio.Writer, level int) error {
 	return nil
 }
 
-func (network *Network) listGMLNodes(writer *bufio.Writer, indent string) error {
+func (network *Network) ListGMLNodes(writer *bufio.Writer, indent string) error {
 	for _, v := range network.Vertices(true) {
 		_, _ = Fprintln(writer, indent+"\tnode [")
 		_, _ = Fprintln(writer, indent+Sprintf("\t\tid %d", v))
@@ -493,7 +493,7 @@ func (network *Network) listGMLNodes(writer *bufio.Writer, indent string) error 
 	return nil
 }
 
-func (network *Network) listGMLEdges(writer *bufio.Writer, indent string) error {
+func (network *Network) ListGMLEdges(writer *bufio.Writer, indent string) error {
 	for k, v := range network.outEdges {
 		for to, wt := range v {
 			Fprintln(writer, indent + "\tedge [")

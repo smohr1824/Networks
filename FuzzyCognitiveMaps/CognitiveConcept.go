@@ -19,14 +19,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package FCM
+package FuzzyCognitiveMap
 
-import ("github.com/smohr1824/Networks/Core")
+type CognitiveConcept struct {
+	Name string
+	initialValue float32
+	ActivationLevel float32
+}
 
-// pending conversion of Network to id nodes with uint instead of string
-type FCM struct {
-	concepts map[uint32] string
-	graph Core.Network
+func NewCognitiveConcept(name string, initialValue float32, level float32) *CognitiveConcept {
+	retVal := new (CognitiveConcept)
+	retVal.initialValue = initialValue
+	retVal.ActivationLevel = level
+	return retVal
+}
+
+func (c *CognitiveConcept) InitialValue(level float32) {
+	c.initialValue = level
 }
 
 
