@@ -22,7 +22,7 @@
 package FuzzyCognitiveMap
 
 import (
-	. "fmt"
+	"math"
 	"testing"
 )
 
@@ -32,12 +32,60 @@ func TestBasicFCM(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		fcm.Step()
 	}
-	t.Logf("Number of concepts: %d", len(fcm.Concepts()))
-	state := fcm.ReportState()
-	for name, level := range state {
-		t.Log(name + ": " + Sprintf("%.2f", level))
+
+	if len(fcm.Concepts()) != 5 {
+		t.Errorf("Should have 5 concepts, actually have %d", len(fcm.Concepts()))
 	}
-	t.Logf("")
+
+	state := fcm.ReportState()
+
+	if state["A"] != 1.0 {
+		t.Errorf("Value of A should be 1.0, is %.2f", state["A"])
+	}
+	if state["B"] != 0.0 {
+		t.Errorf("Value of B should be 0.0, is %.2f", state["B"])
+	}
+
+	if state["C"] != 1.0 {
+		t.Errorf("Value of C should be 1.0, is %.2f", state["C"])
+	}
+
+	if state["D"] != 0.0 {
+		t.Errorf("Value of D should be 0.0, is %.2f", state["D"])
+	}
+
+	if state["E"] != 0.0 {
+		t.Errorf("Value of E should be 0.0, is %.2f", state["E"])
+	}
+
+	fcm.Reset()
+	fcm.SwitchThresholdFunction(Logistic, nil)
+
+	for i := 0; i < 5; i++ {
+		fcm.Step()
+	}
+
+	state = fcm.ReportState()
+	if math.Abs(float64(state["A"]) - 1.0) > 0.05 {
+		t.Errorf("A should be 1.0, is %.2f", state["A"])
+	}
+
+	if math.Abs(float64(state["B"]) - 1.0) > 0.05 {
+		t.Errorf("B should be 0.0, is %.2f", state["B"])
+	}
+
+	if math.Abs(float64(state["C"]) - 0.9) > 0.05 {
+		t.Errorf("C should be 0.9, is %.2f", state["C"])
+	}
+
+	if math.Abs(float64(state["D"]) - 0.5) > 0.05 {
+		t.Errorf("D should be 0.5, is %.2f", state["D"])
+	}
+
+	if math.Abs(float64(state["E"]) - 0.0) > 0.05 {
+		t.Errorf("E should be 0.0, is %.2f", state["E"])
+	}
+
 }
 
 func makeBasicFCM() *FuzzyCognitiveMap{

@@ -26,7 +26,7 @@ import (
 	"fmt"
 	"github.com/smohr1824/Networks/Algorithms"
 	"github.com/smohr1824/Networks/Core"
-	"github.com/smohr1824/Networks/FuzzyCognitiveMap"
+	. "github.com/smohr1824/Networks/FuzzyCognitiveMaps"
 	"os"
 	"runtime/pprof"
 )
@@ -213,6 +213,8 @@ func main() {
 	fcm.AddInfluence("E", "A", -1.0)
 	fcm.AddInfluence("D", "B", 1.0)
 	fcm.AddInfluence("E", "F", -1.0)
+
+	fcm.Step()
 	// test bipartite
 	G := Core.NewNetwork(false)
 

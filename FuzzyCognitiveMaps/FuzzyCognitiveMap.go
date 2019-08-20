@@ -140,8 +140,8 @@ func (c *FuzzyCognitiveMap) Step() {
 	for id, concept := range c.concepts {
 		sum := float32(0.0)
 		influences := c.model.GetSources(id)
-		for _, wt := range influences {
-			sum += concept.ActivationLevel * wt
+		for inId, wt := range influences {
+			sum += c.concepts[inId].ActivationLevel * wt
 		}
 		if c.modifiedKosko {
 			nextConceptLevels[id] = c.tfunc(concept.ActivationLevel + sum)

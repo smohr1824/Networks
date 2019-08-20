@@ -29,6 +29,7 @@ type CognitiveConcept struct {
 
 func NewCognitiveConcept(name string, initialValue float32, level float32) *CognitiveConcept {
 	retVal := new (CognitiveConcept)
+	retVal.Name = name
 	retVal.initialValue = initialValue
 	retVal.ActivationLevel = level
 	return retVal
