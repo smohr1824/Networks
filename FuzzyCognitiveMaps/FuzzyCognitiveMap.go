@@ -86,6 +86,10 @@ func (c *FuzzyCognitiveMap) Threshold() ThresholdType {
 	return c.threshold
 }
 
+func (c *FuzzyCognitiveMap) ModifiedKosko() bool {
+	return c.modifiedKosko
+}
+
 func (c *FuzzyCognitiveMap) AddConcept(conceptName string, initial float32, level float32) bool {
 	_, ok := c.reverseLookup[conceptName]
 	if !ok {
