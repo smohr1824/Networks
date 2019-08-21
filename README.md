@@ -35,3 +35,11 @@ Additional algorithm implementations are planned.
 
 # Other Algorithms
 ConcurrentBipartite tests a network for biparteness.  If successful, the two sets of vertices are returned as uint32[] where the uint32 is the vertex id.
+
+#Fuzzy Cognitive Maps
+The FCM namespace adds basic fuzzy cognitive map capability utilizing the Network class behind the scenes. 
+The threshold function for map inference may be set to bivalent, trivalent, or logistic by specifying an enumerated type, or the user may implement a custom 
+function by creating a function of the form float f(float32 sum). If no threshold function is specified, the map defaults to bivalent. Similarly, the user may 
+select the classic or modified Kosko equation for map inference.  The default is classic. 
+The Step method of the FuzzyCognitiveMap class performs one generation of inference using algorithmic methods, executing with 
+ O(|V| + |E|) complexity.
