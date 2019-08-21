@@ -117,7 +117,7 @@ func processGraph(reader *bufio.Reader) (*Network, error) {
 						return nil, errors.New("Missing node id")
 					}
 				} else {
-					return nil, errors.New("Node recordfound out of place in file")
+					return nil, errors.New("Node record found out of place in file")
 				}
 
 			case "edge":

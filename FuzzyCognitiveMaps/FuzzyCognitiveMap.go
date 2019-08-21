@@ -113,6 +113,15 @@ func (c *FuzzyCognitiveMap) DeleteConcept(conceptName string) {
 	}
 }
 
+func (c *FuzzyCognitiveMap) GetConcept(name string) (*CognitiveConcept, error) {
+	id, ok := c.reverseLookup[name]
+	if !ok {
+		return NewCognitiveConcept("", 0.0, 0.0), errors.New("Concept " + name + " not found in map")
+	}
+
+	return c.concepts[id], nil
+}
+
 func (c *FuzzyCognitiveMap) AddInfluence(influences string, influenced string, weight float32) {
 	from, okFrom := c.reverseLookup[influences]
 	to, okTo := c.reverseLookup[influenced]
@@ -240,8 +249,8 @@ func (c *FuzzyCognitiveMap) listConcepts(writer *bufio.Writer) error {
 		_, err := Fprintln(writer, "\tnode [")
 		_, err = Fprintln(writer, Sprintf("\t\tid %d", id))
 		_, err = Fprintln(writer, "\t\tlabel " + concept.Name)
-		_, err = Fprintln(writer, Sprintf("\t\tactivation %f.4", concept.ActivationLevel))
-		_, err = Fprintln(writer, Sprintf("\t\tinitial %f.4", concept.initialValue))
+		_, err = Fprintln(writer, Sprintf("\t\tactivation %.4f", concept.ActivationLevel))
+		_, err = Fprintln(writer, Sprintf("\t\tinitial %.4f", concept.initialValue))
 		_, err = Fprintln(writer, "]")
 
 		if err != nil {

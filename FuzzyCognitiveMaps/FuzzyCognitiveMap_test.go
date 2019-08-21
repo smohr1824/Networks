@@ -85,7 +85,38 @@ func TestBasicFCM(t *testing.T) {
 	if math.Abs(float64(state["E"]) - 0.0) > 0.05 {
 		t.Errorf("E should be 0.0, is %.2f", state["E"])
 	}
+}
 
+func TestReadWriteFCM(t *testing.T) {
+	fcm := makeBasicFCM()
+
+	err := WriteFCMToFile(fcm, "..\\Work\\basic.fcm")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	fcm2, err := ReadFCMFromFile("..\\Work\\basic.fcm")
+	if err != nil {
+		t.Error("Error reading FCM file: " + err.Error())
+	}
+
+	if len(fcm.Concepts()) != len(fcm2.Concepts()) {
+		t.Error("Unequal number of concepts")
+		t.Logf("In memory has %d concepts", len(fcm.Concepts()))
+		t.Logf("Read has %d concepts", len(fcm2.Concepts()))
+	}
+	for _, concept := range fcm2.Concepts() {
+		conceptStd, err := fcm.GetConcept(concept.Name)
+		if err != nil {
+			t.Error("Couldn't find concept " + concept.Name)
+		}
+
+		// check on Go quality -- delete after test
+		if conceptStd.Name != concept.Name || conceptStd.ActivationLevel != concept.ActivationLevel || conceptStd.GetInitialValue() != concept.GetInitialValue() {
+			t.Error("Guess I don't understand equality in Go")
+		}
+
+	}
 }
 
 func makeBasicFCM() *FuzzyCognitiveMap{

@@ -35,8 +35,12 @@ func NewCognitiveConcept(name string, initialValue float32, level float32) *Cogn
 	return retVal
 }
 
-func (c *CognitiveConcept) InitialValue(level float32) {
+func (c *CognitiveConcept) SetInitialLevel(level float32) {
 	c.initialValue = level
+}
+
+func (c *CognitiveConcept) GetInitialValue() float32 {
+	return c.initialValue
 }
 
 
