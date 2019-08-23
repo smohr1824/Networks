@@ -38,12 +38,12 @@ func WriteNetworkToFile(net *Network, filename string) error {
 	}
 	defer f.Close()
 	w := bufio.NewWriter(f)
-	writeNetwork(net, w)
+	WriteNetwork(net, w)
 	w.Flush()
 	return nil
 }
 
-func writeNetwork(net *Network, writer *bufio.Writer) {
+func WriteNetwork(net *Network, writer *bufio.Writer) {
 	net.ListGML(writer, 0)
 }
 
@@ -56,10 +56,10 @@ func ReadNetworkFromFile(filename string) (*Network, error) {
 	f.Seek(0, io.SeekStart)
 	reader := bufio.NewReader(f)
 
-	return readNetwork(reader)
+	return ReadNetwork(reader)
 }
 
-func readNetwork(reader *bufio.Reader) (*Network, error) {
+func ReadNetwork(reader *bufio.Reader) (*Network, error) {
 	gmlTokenizer := NewGMLTokenizer()
 	gmlTokenizer.EatWhitespace(reader)
 	top := gmlTokenizer.ReadNextToken(reader)

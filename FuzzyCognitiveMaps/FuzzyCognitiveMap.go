@@ -169,6 +169,7 @@ func (c *FuzzyCognitiveMap) Step() {
 	}
 }
 
+// return the concept activation levels
 func (c *FuzzyCognitiveMap) ReportState() map[string] float32 {
 	retVal := make(map[string] float32)
 	for _, concept := range c.concepts {

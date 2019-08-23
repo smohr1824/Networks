@@ -303,8 +303,8 @@ func (p *elementaryLayer) GetSources(vertex uint32) map[NodeLayerTuple] float32 
 	inedges, ok := p.inEdges[vertex]
 	if ok {
 		for tuple, _ := range inedges {
-			tgt := resolvedNodeLayerTuple {NodeId: tuple.NodeId, Coordinates: tuple.Coordinates}
-			inedges[tgt] = inedges[tuple]
+			tgt := NodeLayerTuple {NodeId: tuple.NodeId, Coordinates: p.m.UnaliasCoordinates(tuple.Coordinates)}
+			retVal[tgt] = inedges[tuple]
 		}
 	}
 
@@ -320,7 +320,7 @@ func (p *elementaryLayer) List(writer *bufio.Writer, delimiter string) {
 
 	for from, targets := range p.edgeList {
 		for to, wt := range targets {
-			Fprintln(writer, strconv.Itoa(int(from)) + ":" + p.m.UnaliasCoordinates(p.layerCoordinates) + delimiter + strconv.Itoa(int(to.NodeId)) + p.m.UnaliasCoordinates(to.Coordinates) + delimiter + Sprintf("%f", wt))
+			Fprintln(writer, strconv.Itoa(int(from)) + ":" + p.m.UnaliasCoordinates(p.layerCoordinates) + delimiter + strconv.Itoa(int(to.NodeId)) + p.m.UnaliasCoordinates(to.Coordinates) + delimiter + Sprintf("%.4f", wt))
 		}
 	}
 }
@@ -345,7 +345,7 @@ func (p *elementaryLayer) ListInterlayerGML(writer *bufio.Writer) {
 			Fprintln(writer, indent + "\t\tcoordinates " + p.m.UnaliasCoordinates(to.Coordinates))
 			Fprintln(writer, indent + "\t]")
 
-			Fprintln(writer, indent + "\tweight " + Sprintf("%f", wt))
+			Fprintln(writer, indent + "\tweight " + Sprintf("%.4f", wt))
 			Fprintln(writer, indent + "]")
 		}
 	}

@@ -22,10 +22,9 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
-	"github.com/smohr1824/Networks/Algorithms"
-	"github.com/smohr1824/Networks/Core"
 	. "github.com/smohr1824/Networks/FuzzyCognitiveMaps"
 	"os"
 	"runtime/pprof"
@@ -197,7 +196,30 @@ func main() {
 	fmt.Println(fmt.Sprintf("%d communities found", len(communities)))
 	fmt.Println(communities)*/
 
-	fcm := NewFuzzyCognitiveMapDefault()
+	// BasicMLFCM()
+	fcm := BuildMLBasic()
+	s := NewMLFCMSerializer()
+	s.WriteMLFCMToFile(fcm, "..\\Work\\mlbasic.fcm")
+	fcm2,_ := s.ReadMLFCMFromFile("..\\Work\\MLBasic.fcm")
+	layers := fcm2.ListLayers()
+	for _,layer := range layers {
+		fmt.Println(layer)
+	}
+	fmt.Println("Initial State")
+	writeState(fcm)
+
+	for i := 1; i < 4; i++ {
+		fcm.Step()
+		fmt.Println(fmt.Sprintf("Iteration %d", i))
+		writeState(fcm)
+
+	}
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Scan()
+
+
+	// test basic fcm
+	/*fcm := NewFuzzyCognitiveMapDefault()
 	fcm.AddConcept("A", 1.0, 1.0)
 	fcm.AddConcept("B", 0.0, 0.0)
 	fcm.AddConcept("C", 1.0, 1.0)
@@ -214,9 +236,9 @@ func main() {
 	fcm.AddInfluence("D", "B", 1.0)
 	fcm.AddInfluence("E", "F", -1.0)
 
-	fcm.Step()
+	fcm.Step() */
 	// test bipartite
-	G := Core.NewNetwork(false)
+	/*G := Core.NewNetwork(false)
 
 	for i:= 0; i < 1001; i += 2 {
 		G.AddVertex(uint32(i))
@@ -235,7 +257,62 @@ func main() {
 		fmt.Println("Bipartite")
 		fmt.Println(fmt.Sprintf("R is %d items long", len(R)))
 		fmt.Println(fmt.Sprintf("B is %d items long", len(B)))
+	} */
+}
+
+func BasicMLFCM() {
+	fcm := BuildMLBasic()
+
+	concepts := fcm.ListConcepts()
+	s := ""
+	for _, conName := range concepts {
+		s += conName + " "
 	}
+	fmt.Println(s)
+}
+
+func writeState(fcm *MultilayerFuzzyCognitiveMap) {
+	concepts := fcm.ListConcepts()
+	sMain := ""
+	for _, concept := range concepts {
+		aggLevel, _ := fcm.GetActivationLevel(concept)
+		sMain += fmt.Sprintf("%s: %.4f ", concept, aggLevel)
+	}
+	fmt.Println(sMain)
+	layers := fcm.ListLayers()
+	for _, layer := range layers {
+		levels, _ := fcm.GetLayerActivationLevels(layer)
+		fmt.Println(layer)
+		sLevel := ""
+		for k, v := range levels {
+			sLevel += fmt.Sprintf("%s: %.4f ", k, v)
+		}
+		fmt.Println(sLevel)
+	}
+}
+
+func BuildMLBasic() *MultilayerFuzzyCognitiveMap {
+	indices := []string {"I", "II"}
+	dimensions := []string{"levels"}
+	allindices := make([][]string,1)
+	allindices[0] = indices
+
+	fcm:= NewMultilayerFuzzyCognitiveMap(dimensions, allindices, false, Bivalent)
+
+	fcm.AddConceptToLayer("A", "I", float32(1.0), float32(1.0), false)
+	fcm.AddConceptToLayer("B", "I", float32(0.0), float32(0.0), false)
+	fcm.AddConceptToLayer("C", "I", float32(0.0), float32(0.0), false)
+
+	fcm.AddConceptToLayer("A", "II", float32(1.0), float32(1.0), false)
+	fcm.AddConceptToLayer("D", "II", float32(0.0), float32(0.0), false);
+	fcm.AddConceptToLayer("E", "II", float32(0.0), float32(0.0), false)
+
+	fcm.AddInfluence("A", "I", "B", "I", float32(1.0))
+	fcm.AddInfluence("A", "I", "C", "I", float32(1.0))
+	fcm.AddInfluence("A", "II", "D", "II", float32(1.0))
+	fcm.AddInfluence("D", "II", "E", "II", float32(1.0))
+	fcm.AddInfluence("E", "II", "A", "I", float32(1.0))
+	return fcm
 }
 
 

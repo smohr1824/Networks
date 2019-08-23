@@ -25,7 +25,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	. "github.com/smohr1824/Networks/Core"
+	"github.com/smohr1824/Networks/Core"
 	"io"
 	"os"
 	"strconv"
@@ -35,16 +35,16 @@ import (
 func WriteFCMToFile(fcm *FuzzyCognitiveMap, filename string) error {
 	f, err := os.Create(filename)
 	if err != nil {
-		return NewIoCreateError(fmt.Sprintf("Error creating %s for output: %s", filename, err.Error()))
+		return Core.NewIoCreateError(fmt.Sprintf("Error creating %s for output: %s", filename, err.Error()))
 	}
 	defer f.Close()
 	w := bufio.NewWriter(f)
-	writeNetwork(fcm, w)
+	WriteNetwork(fcm, w)
 	w.Flush()
 	return nil
 }
 
-func writeNetwork(fcm *FuzzyCognitiveMap, writer *bufio.Writer) error {
+func WriteNetwork(fcm *FuzzyCognitiveMap, writer *bufio.Writer) error {
 	return fcm.ListGML(writer)
 }
 
@@ -57,11 +57,11 @@ func ReadFCMFromFile(filename string) (*FuzzyCognitiveMap, error) {
 	f.Seek(0, io.SeekStart)
 	reader := bufio.NewReader(f)
 
-	return readFCM(reader)
+	return ReadFCM(reader)
 }
 
-func readFCM(reader *bufio.Reader) (*FuzzyCognitiveMap, error) {
-	gmlTokenizer := NewGMLTokenizer()
+func ReadFCM(reader *bufio.Reader) (*FuzzyCognitiveMap, error) {
+	gmlTokenizer := Core.NewGMLTokenizer()
 	gmlTokenizer.EatWhitespace(reader)
 	top := gmlTokenizer.ReadNextToken(reader)
 	if top == "graph" {
@@ -93,7 +93,7 @@ func processFCM(reader *bufio.Reader) (*FuzzyCognitiveMap, error) {
 			reader.UnreadRune()
 		}
 
-		gmlTokenizer := NewGMLTokenizer()
+		gmlTokenizer := Core.NewGMLTokenizer()
 		gmlTokenizer.EatWhitespace(reader)
 		token := gmlTokenizer.ReadNextToken(reader)
 		switch(strings.ToLower(token)) {
@@ -181,7 +181,7 @@ func processConcept(nodeProps map[string] string, graph *FuzzyCognitiveMap, look
 		if err != nil {
 			return errors.New("Error converting a concept's node id")
 		}
-		gmlTokenizer := NewGMLTokenizer()
+		gmlTokenizer := Core.NewGMLTokenizer()
 		finitial, err := gmlTokenizer.ProcessFloatProp(initial)
 		if err != nil {
 			return errors.New("Error converting initial activation value for concept")
@@ -214,7 +214,7 @@ func processEdge(edgeProps map[string] string, graph *FuzzyCognitiveMap, lookup 
 	wt, okWt := edgeProps["weight"]
 
 	if okSrc && okTgt && okWt {
-		gmlTokenizer := NewGMLTokenizer()
+		gmlTokenizer := Core.NewGMLTokenizer()
 		srcId, errSrc := processNodeId(src)
 		tgtId, errTgt := processNodeId(tgt)
 		fwt, errWt := gmlTokenizer.ProcessFloatProp(wt)

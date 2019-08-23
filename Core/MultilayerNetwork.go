@@ -25,6 +25,7 @@ import (
 	"bufio"
 	"errors"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 	. "fmt"
@@ -55,6 +56,17 @@ func NewMultilayerNetwork(aspects []string, indices[][]string, isdirected bool) 
 	p.nodeIdsAndLayers = make(map[uint32] []*elementaryLayer)
 
 	return p
+}
+
+func (p *MultilayerNetwork) ElementaryLayers() []string {
+	layers := make([]string, len(p.elementaryLayers))
+	i := 0
+	for _, layer := range p.elementaryLayers {
+		layers[i] = p.UnaliasCoordinates(layer.layerCoordinates)
+		i++
+	}
+	sort.Slice(layers, func(i, j int) bool { return layers[i] < layers[j] })
+	return layers
 }
 
 func (p *MultilayerNetwork) Order() int {
@@ -140,10 +152,24 @@ func (p *MultilayerNetwork) OutDegree(vertex NodeLayerTuple) int {
 
 func (p *MultilayerNetwork) HasElementaryLayer(coords string) bool {
 	rcoords, err := p.resolveCoordinates(coords)
-	if err == nil {
+	if err != nil {
 		return false
 	} else {
 		return p.elementaryLayerExists(rcoords)
+	}
+}
+
+func (p *MultilayerNetwork) VerticesInLayer(coords string) ([]uint32, error) {
+	rcoords, err := p.resolveCoordinates(coords)
+	if err == nil {
+		layer, ok := p.elementaryLayers[rcoords]
+		if ok {
+			return layer.Vertices(true), nil
+		} else {
+			return nil, errors.New(Sprintf("Layer %s not found in network", coords))
+		}
+	} else {
+		return nil, errors.New(Sprintf("Layer %s not found in network", coords))
 	}
 }
 
@@ -246,14 +272,16 @@ func (p *MultilayerNetwork) GetSources(vertex NodeLayerTuple, coupled bool) map[
 			retVal[node] = wt
 		}
 
-		// add node-coupled sources
-		for _, layer := range p.nodeIdsAndLayers[vertex.NodeId] {
-			if layer.AspectCoordinates() == resolvedCoordinates {
-				continue
-			} else {
-				srcs := layer.GetSources(vertex.NodeId)
-				for nlt, wt := range srcs {
-					retVal[nlt] = wt
+		if coupled {
+			// add node-coupled sources
+			for _, layer := range p.nodeIdsAndLayers[vertex.NodeId] {
+				if layer.AspectCoordinates() == resolvedCoordinates {
+					continue
+				} else {
+					srcs := layer.GetSources(vertex.NodeId)
+					for nlt, wt := range srcs {
+						retVal[nlt] = wt
+					}
 				}
 			}
 		}

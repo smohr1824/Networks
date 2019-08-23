@@ -111,7 +111,7 @@ func processMLNetwork(reader *bufio.Reader) (*MultilayerNetwork, error) {
 			case "aspects":
 				if globalState == 1 {
 					globalState = 2
-					aspects, indices := readAspects(reader)
+					aspects, indices := ReadAspects(reader)
 					if len(aspects) == 0 {
 						return nil, errors.New("No aspects read")
 					}
@@ -159,7 +159,7 @@ func processMLNetwork(reader *bufio.Reader) (*MultilayerNetwork, error) {
 	}
 }
 
-func readAspects(reader *bufio.Reader) ([]string, [][]string) {
+func ReadAspects(reader *bufio.Reader) ([]string, [][]string) {
 	gmlTokenizer := NewGMLTokenizer()
 	aspectDictionary := gmlTokenizer.ReadListRecord(reader)
 	aspects := make([]string, 0)
@@ -179,7 +179,7 @@ func readLayer(reader *bufio.Reader, graph *MultilayerNetwork) error {
 			gmlTokenizer.EatWhitespace(reader)
 			coords := gmlTokenizer.ReadNextValue(reader)
 			gmlTokenizer.EatWhitespace(reader)
-			net, err := readNetwork(reader)
+			net, err := ReadNetwork(reader)
 			if err != nil {
 				return errors.New("error deserializing network for elementary layer " + coords)
 			} else {
@@ -212,14 +212,14 @@ func readInterlayerEdge(reader *bufio.Reader, graph *MultilayerNetwork) error {
 			switch strings.ToLower(k) {
 				case "source":
 					sreader := bufio.NewReader(strings.NewReader(v))
-					src, err = processQualifiedNode(sreader)
+					src, err = ProcessQualifiedNode(sreader)
 					if err != nil {
 						return err
 					}
 
 				case "target":
 					sreader := bufio.NewReader(strings.NewReader(v))
-					tgt, err = processQualifiedNode(sreader)
+					tgt, err = ProcessQualifiedNode(sreader)
 					if err != nil {
 						return err
 					}
@@ -242,7 +242,7 @@ func readInterlayerEdge(reader *bufio.Reader, graph *MultilayerNetwork) error {
 	return nil
 }
 
-func processQualifiedNode(reader *bufio.Reader) (NodeLayerTuple, error){
+func ProcessQualifiedNode(reader *bufio.Reader) (NodeLayerTuple, error){
 	gmlTokenizer := NewGMLTokenizer()
 	nodeProps := gmlTokenizer.ReadListRecord(reader)
 	id, okId := nodeProps["id"]
