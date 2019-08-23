@@ -230,7 +230,7 @@ func (p *elementaryLayer) AddEdge(from resolvedNodeLayerTuple, to resolvedNodeLa
 		return
 	} else {
 		if from.IsSameElementaryLayer(to) {
-			p.g.AddEdge(from.NodeId, to.NodeId, wt)
+			_ = p.g.AddEdge(from.NodeId, to.NodeId, wt)
 		} else {
 			edges, ok := p.edgeList[from.NodeId]
 			if ok {

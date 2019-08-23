@@ -207,12 +207,13 @@ func main() {
 	}
 	fmt.Println("Initial State")
 	writeState(fcm)
+	fmt.Println("")
 
 	for i := 1; i < 4; i++ {
 		fcm.Step()
 		fmt.Println(fmt.Sprintf("Iteration %d", i))
 		writeState(fcm)
-
+		fmt.Println("")
 	}
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Scan()
@@ -297,7 +298,7 @@ func BuildMLBasic() *MultilayerFuzzyCognitiveMap {
 	allindices := make([][]string,1)
 	allindices[0] = indices
 
-	fcm:= NewMultilayerFuzzyCognitiveMap(dimensions, allindices, false, Bivalent)
+	fcm:= NewMultilayerFuzzyCognitiveMap(dimensions, allindices,false, Logistic)
 
 	fcm.AddConceptToLayer("A", "I", float32(1.0), float32(1.0), false)
 	fcm.AddConceptToLayer("B", "I", float32(0.0), float32(0.0), false)
