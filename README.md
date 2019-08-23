@@ -43,3 +43,5 @@ function by creating a function of the form float f(float32 sum). If no threshol
 select the classic or modified Kosko equation for map inference.  The default is classic. 
 The Step method of the FuzzyCognitiveMap class performs one generation of inference using algorithmic methods, executing with 
  O(|V| + |E|) complexity.
+ 
+ Multilayer fuzzy cognitive maps are supported, as well. Inference is as with monolayer fuzzy cognitive maps. Influences are explicit, i.e., categorical coupling is not used. Resolution of the overall activation level of a concept is acheived by summing the elementary layer activation layers and applying the transfer function and update rule.
