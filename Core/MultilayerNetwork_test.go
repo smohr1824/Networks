@@ -200,3 +200,46 @@ func TestBasicMultilayer(t *testing.T) {
 	}
 
 }
+
+func TestMultilayerNeighbors(t *testing.T) {
+	Q, err := ReadMultilayerNetworkFromFile("multilayer_three_aspects.gml")
+	if err != nil {
+		t.Error("Error reading test file multilayer_three_aspects.gml")
+		return
+	}
+
+	nlt := NewNodeLayerTuple(uint32(2), "I,A,1")
+	n := Q.GetNeighbors(*nlt)
+	if len(n) != 14 {
+		t.Errorf("Expected 14 neighbors, found %d", len(n))
+	}
+
+	nlt1 := NewNodeLayerTuple(3, "I,B,2")
+	nlt2 := NewNodeLayerTuple(1, "I,A,1")
+	nlt3 := NewNodeLayerTuple(3, "I,A,1")
+
+	_, ok1 := n[*nlt1]
+	_, ok2 := n[*nlt2]
+	_, ok3 := n[*nlt3]
+	if !ok1 || !ok2 || !ok3 {
+		t.Errorf("One or more explicit neighbors missing")
+		for ngbr, _ := range n {
+			t.Logf("Neighbor: %d in layer %s", ngbr.NodeId, ngbr.Coordinates)
+		}
+	}
+
+}
+
+func TestSupraadjacency(t *testing.T) {
+	Q, err := ReadMultilayerNetworkFromFile("multilayer_three_aspects.gml")
+	if err != nil {
+		t.Error("Error reading test file multilayer_three_aspects.gml")
+		return
+	}
+	supra := Q.MakeSupraAdjacencyMatrix()
+	for _, row := range supra {
+		for _, elt := range row {
+			t.Logf("%.2f ", elt)
+		}
+	}
+}

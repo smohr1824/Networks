@@ -22,9 +22,9 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
+	"github.com/smohr1824/Networks/Core"
 	. "github.com/smohr1824/Networks/FuzzyCognitiveMaps"
 	"os"
 	"runtime/pprof"
@@ -197,7 +197,7 @@ func main() {
 	fmt.Println(communities)*/
 
 	// BasicMLFCM()
-	fcm := BuildMLBasic()
+	/*fcm := BuildMLBasic()
 	s := NewMLFCMSerializer()
 	s.WriteMLFCMToFile(fcm, "..\\Work\\mlbasic.fcm")
 	fcm2,_ := s.ReadMLFCMFromFile("..\\Work\\MLBasic.fcm")
@@ -216,9 +216,20 @@ func main() {
 		fmt.Println("")
 	}
 	scanner := bufio.NewScanner(os.Stdin)
-	scanner.Scan()
+	scanner.Scan() */
 
-
+	Q, err := Core.ReadMultilayerNetworkFromFile("multilayer_three_aspects.gml")
+	if err != nil {
+		fmt.Println("Error reading test file multilayer_three_aspects.gml")
+		return
+	}
+	supra := Q.MakeSupraAdjacencyMatrix()
+	for _, row := range supra {
+		for _, elt := range row {
+			fmt.Printf("%.0f ", elt)
+		}
+		fmt.Println("")
+	}
 	// test basic fcm
 	/*fcm := NewFuzzyCognitiveMapDefault()
 	fcm.AddConcept("A", 1.0, 1.0)

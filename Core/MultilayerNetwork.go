@@ -696,14 +696,16 @@ func (p *MultilayerNetwork) MakeSupraAdjacencyMatrix() [][]float32 {
 		retVal[i] = make([]float32, dimension)
 	}
 
-	layerList := make([][]string, len(p.aspects))
+	//layerList := make([][]string, len(p.aspects))
+	layerList := make([][]string, 0)
 	aspect := p.aspects[0]
 
 	// build an ordered, hierarchical list of all elementary layer indices
-	coords := make([]string,1)
+	coords := make([]string,0)
 	for _, mark := range p.indices[0] {
 		coords = append(coords, mark)
-		p.recurseAdjacencyMatrix(layerList, aspect, 0, 0, coords)
+		p.recurseAdjacencyMatrix(&layerList, aspect, 0, 0, &coords)
+		coords = append(coords[:0], coords[1:]...)
 	}
 
 	// The list dictates how the supraadjacency matrix is organized.
@@ -859,21 +861,23 @@ func (p *MultilayerNetwork) getDimension() int {
 	return ct * elemSize
 }
 
-func (p *MultilayerNetwork) recurseAdjacencyMatrix(allCoords [][]string, aspect string, blockRow int, blockColumn int, layerCoords []string) {
+func (p *MultilayerNetwork) recurseAdjacencyMatrix(allCoords *[][]string, aspect string, blockRow int, blockColumn int, layerCoords *[]string) {
 	index := p.locOf(p.aspects, aspect) + 1
 	if index == len(p.aspects) - 1 {
 		// innermost aspect
 		for _, stop := range p.indices[index] {
-			elemLayerCoords := make([]string, len(layerCoords))
+			//elemLayerCoords := make([]string, len(*layerCoords))
+			elemLayerCoords :=make([]string, 0)
+			elemLayerCoords = append(elemLayerCoords, *layerCoords...)
 			elemLayerCoords = append(elemLayerCoords, stop)
-			allCoords = append(allCoords, elemLayerCoords)
+			*allCoords = append(*allCoords, elemLayerCoords)
 		}
 	} else {
 		curAspect := p.aspects[index]
 		for _, stop := range p.indices[index] {
-			layerCoords = append(layerCoords, stop)
+			*layerCoords = append(*layerCoords, stop)
 			p.recurseAdjacencyMatrix(allCoords, curAspect, blockRow, blockColumn, layerCoords)
-			layerCoords = layerCoords[:len(layerCoords) - 1]
+			*layerCoords = (*layerCoords)[:len(*layerCoords) - 1]
 
 		}
 	}

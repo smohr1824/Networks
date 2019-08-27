@@ -20,11 +20,11 @@
 // SOFTWARE.
 
 package Core
+
 import (
 	"bufio"
 	. "fmt"
 	"strconv"
-	"strings"
 )
 
 type elementaryLayer struct {
@@ -80,16 +80,16 @@ func (p *elementaryLayer) InterlayerAdjacencies(toCoords string) [][]float32 {
 	for i:= range retVal {
 		retVal[i] = make([]float32, size)
 	}
-	sCoords := strings.Split(toCoords, ",")
-	to := make([]int, len(sCoords))
-	for i := 0; i < len(sCoords); i++ {
-		to[i], _ = strconv.Atoi(sCoords[i])
-	}
+	//sCoords := strings.Split(toCoords, ",")
+	//to := make([]int, len(sCoords))
+	//for i := 0; i < len(sCoords); i++ {
+	//	to[i], _ = strconv.Atoi(sCoords[i])
+	//}
 	for from, _ := range p.edgeList {
 		adjList := p.edgeList[from]
 		fromIndex := p.locOf(vertices, from)
 		for tgt, _ := range adjList {
-			if tgt.AreSameElementaryLayer(to){
+			if tgt.AreSameElementaryLayer(toCoords) {
 				toIndex := p.locOf(vertices, tgt.NodeId)
 				retVal[fromIndex][toIndex] = adjList[tgt]
 			}

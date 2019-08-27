@@ -45,15 +45,8 @@ func (p *resolvedNodeLayerTuple) IsSameElementaryLayer(b resolvedNodeLayerTuple)
 	}
 }
 
-func (p *resolvedNodeLayerTuple) AreSameElementaryLayer(b []int) bool {
-	s := ""
-	for i, c := range b {
-		s += string(c)
-		if i < len(b) - 1 {
-			s += ","
-		}
-	}
-	if p.ToString() == s {
+func (p *resolvedNodeLayerTuple) AreSameElementaryLayer (testCoords string) bool {
+	if p.Coordinates == testCoords {
 		return true
 	} else {
 		return false
