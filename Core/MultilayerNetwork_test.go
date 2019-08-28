@@ -237,6 +237,32 @@ func TestSupraadjacency(t *testing.T) {
 		return
 	}
 	supra := Q.MakeSupraAdjacencyMatrix()
+
+	// check a block on the diagonal, i.e., an elementary layer's adjacency matrix
+	if !(supra[21][22] == 1 && supra[22][21] == 1 && supra[23][21] == 1) {
+		t.Error("Failure to find adjacencies within II,B,2")
+	}
+
+	// check all the explicit interlayer adjacencies
+	if !(supra[0][7] == 1 && supra[1][11] == 1 && supra[20][3] == 1 && supra[35][0] == 1) {
+		t.Error("Failure to find interlayer adjacencies")
+	}
+
+	// test three elements that MUST BE zero
+	if (supra[3][14] != 0 || supra[11][4] != 0 || supra[32][8] != 0) {
+		t.Error("Found elements that should have been zero but were nozero")
+	}
+
+	// granted, we only tested 0.7% of the supra-adjacency matrix
+}
+
+func listSupraAdjacencyMatrix(t *testing.T) {
+	Q, err := ReadMultilayerNetworkFromFile("multilayer_three_aspects.gml")
+	if err != nil {
+		t.Error("Error reading test file multilayer_three_aspects.gml")
+		return
+	}
+	supra := Q.MakeSupraAdjacencyMatrix()
 	for _, row := range supra {
 		for _, elt := range row {
 			t.Logf("%.2f ", elt)
