@@ -696,7 +696,6 @@ func (p *MultilayerNetwork) MakeSupraAdjacencyMatrix() [][]float32 {
 		retVal[i] = make([]float32, dimension)
 	}
 
-	//layerList := make([][]string, len(p.aspects))
 	layerList := make([][]string, 0)
 	aspect := p.aspects[0]
 
@@ -708,7 +707,7 @@ func (p *MultilayerNetwork) MakeSupraAdjacencyMatrix() [][]float32 {
 		coords = append(coords[:0], coords[1:]...)
 	}
 
-	// The list dictates how the supraadjacency matrix is organized.
+	// The list dictates how the supra-adjacency matrix is organized.
 	// Begin building the matrix block by block, with each block representing an elementary layer adjacency matrix (on the diagonal)
 	// or interlayer adjacencies (off the diagonal)
 	blockCt := len(layerList)
@@ -785,7 +784,7 @@ func (p *MultilayerNetwork) removeElementaryLayerFromMultilayerNetwork(resolved 
 					}
 				}
 				if i < len(layers) {
-					// remove the ith layer by copying down the last and truncating the slice
+					// remove the ith layer by copying down the rest of the slice
 					layers[i] = layers[len(layers) - 1]
 					layers[len(layers) - 1] = nil		// turn last into nil
 					layers = layers[:len(layers) - 1]	// truncate
@@ -861,6 +860,8 @@ func (p *MultilayerNetwork) getDimension() int {
 	return ct * elemSize
 }
 
+// construct a flattening of the aspects by using recursion such that the last aspect repeats its indices for each index of the next to last aspect, then the next to last, and so on until the first aspect
+// enumerates its indices once
 func (p *MultilayerNetwork) recurseAdjacencyMatrix(allCoords *[][]string, aspect string, blockRow int, blockColumn int, layerCoords *[]string) {
 	index := p.locOf(p.aspects, aspect) + 1
 	if index == len(p.aspects) - 1 {
@@ -868,6 +869,7 @@ func (p *MultilayerNetwork) recurseAdjacencyMatrix(allCoords *[][]string, aspect
 		for _, stop := range p.indices[index] {
 			//elemLayerCoords := make([]string, len(*layerCoords))
 			elemLayerCoords :=make([]string, 0)
+			// concatenate layerCoords to the end of elemLayerCoords
 			elemLayerCoords = append(elemLayerCoords, *layerCoords...)
 			elemLayerCoords = append(elemLayerCoords, stop)
 			*allCoords = append(*allCoords, elemLayerCoords)
@@ -877,6 +879,7 @@ func (p *MultilayerNetwork) recurseAdjacencyMatrix(allCoords *[][]string, aspect
 		for _, stop := range p.indices[index] {
 			*layerCoords = append(*layerCoords, stop)
 			p.recurseAdjacencyMatrix(allCoords, curAspect, blockRow, blockColumn, layerCoords)
+			// delete the first entry of layerCoords by copying the remaining slice down one element
 			*layerCoords = (*layerCoords)[:len(*layerCoords) - 1]
 
 		}

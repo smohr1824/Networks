@@ -80,11 +80,7 @@ func (p *elementaryLayer) InterlayerAdjacencies(toCoords string) [][]float32 {
 	for i:= range retVal {
 		retVal[i] = make([]float32, size)
 	}
-	//sCoords := strings.Split(toCoords, ",")
-	//to := make([]int, len(sCoords))
-	//for i := 0; i < len(sCoords); i++ {
-	//	to[i], _ = strconv.Atoi(sCoords[i])
-	//}
+
 	for from, _ := range p.edgeList {
 		adjList := p.edgeList[from]
 		fromIndex := p.locOf(vertices, from)
