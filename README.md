@@ -45,4 +45,6 @@ The Step method of the FuzzyCognitiveMap class performs one generation of infere
  O(|V| + |E|) complexity.
  
  Multilayer fuzzy cognitive maps are supported, as well. Inference is as with monolayer fuzzy cognitive maps. 
- Influences are explicit, i.e., categorical coupling is not used. Resolution of the overall activation level of a concept is acheived by summing the elementary layer activation layers and applying the transfer function and update rule.
+ Influences are explicit, i.e., categorical coupling is not used. This has the effect of letting each layer execute as a loosely coupled subsystem (coupled only by explicit interlayer edges), thereby permitting insight into the behavior of 
+  different components of the overall map. Resolution of the overall activation level of a concept is acheived by summing the elementary layer activation layers and applying the transfer function and update rule. Consequently, elementary layers are normalized components 
+  of the multilayer map, i.e., the concept activation level of any elementary layer has influence equal to the concept activation level of any other layer. Explicit interlayer edges should be used when a particular elementary layer dominates a concept. 
