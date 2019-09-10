@@ -81,10 +81,10 @@ func (p *elementaryLayer) InterlayerAdjacencies(toCoords string) [][]float32 {
 		retVal[i] = make([]float32, size)
 	}
 
-	for from, _ := range p.edgeList {
+	for from := range p.edgeList {
 		adjList := p.edgeList[from]
 		fromIndex := p.locOf(vertices, from)
-		for tgt, _ := range adjList {
+		for tgt := range adjList {
 			if tgt.AreSameElementaryLayer(toCoords) {
 				toIndex := p.locOf(vertices, tgt.NodeId)
 				retVal[fromIndex][toIndex] = adjList[tgt]
@@ -119,7 +119,7 @@ func (p *elementaryLayer) Degree(vertex uint32) int {
 }
 func (p *elementaryLayer) InterlayerDegree(vertex uint32) int {
 	if !p.HasVertex(vertex) {
-		return 0;
+		return 0
 	}
 
 	retVal := 0
@@ -170,7 +170,7 @@ func (p *elementaryLayer) RemoveVertex(vertex uint32) {
 
 	edges, ok := p.inEdges[vertex]
 	if ok {
-		for k, _ := range edges {
+		for k := range edges {
 			p.m.removeOutEdge(k, *nodeT)
 		}
 	}
@@ -263,7 +263,7 @@ func (p *elementaryLayer) GetNeighbors(vertex uint32) map[NodeLayerTuple] float3
 
 	graphNeighbors := p.g.GetNeighbors(vertex)
 	layerAspectCoords := p.m.UnaliasCoordinates(p.layerCoordinates)
-	for node, _ := range graphNeighbors {
+	for node := range graphNeighbors {
 		local := NewNodeLayerTuple(node, layerAspectCoords)
 		retVal[*local] = graphNeighbors[node]
 	}
@@ -271,7 +271,7 @@ func (p *elementaryLayer) GetNeighbors(vertex uint32) map[NodeLayerTuple] float3
 	// add interlayer targets
 	edges, ok := p.edgeList[vertex]
 	if ok {
-		for tuple, _ := range edges {
+		for tuple := range edges {
 			tgt := NewNodeLayerTuple(tuple.NodeId, p.m.UnaliasCoordinates(tuple.Coordinates))
 			retVal[*tgt] = edges[tuple]
 		}
@@ -290,7 +290,7 @@ func (p *elementaryLayer) GetSources(vertex uint32) map[NodeLayerTuple] float32 
 	graphSources := p.g.GetSources(vertex)
 	layerAspectCoordinates := p.m.UnaliasCoordinates(p.layerCoordinates)
 
-	for node, _ := range graphSources {
+	for node := range graphSources {
 		local := NewNodeLayerTuple(node, layerAspectCoordinates)
 		retVal[*local] = graphSources[node]
 	}
@@ -298,7 +298,7 @@ func (p *elementaryLayer) GetSources(vertex uint32) map[NodeLayerTuple] float32 
 	// add interlayer sources
 	inedges, ok := p.inEdges[vertex]
 	if ok {
-		for tuple, _ := range inedges {
+		for tuple := range inedges {
 			tgt := NodeLayerTuple {NodeId: tuple.NodeId, Coordinates: p.m.UnaliasCoordinates(tuple.Coordinates)}
 			retVal[tgt] = inedges[tuple]
 		}

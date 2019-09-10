@@ -24,11 +24,11 @@ package Core
 import (
 	"bufio"
 	"errors"
+	. "fmt"
 	"reflect"
 	"sort"
 	"strconv"
 	"strings"
-	. "fmt"
 )
 
 type MultilayerNetwork struct {

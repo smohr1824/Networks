@@ -131,11 +131,6 @@ func closeChannels(channels []chan []coloring) {
 	}
 }
 
-func closeAllChannels(mainchan chan []coloring) {
-	//closeChannels(channels)
-	close(mainchan)
-}
-
 // goroutine enumerates the neighbors, assigns a color, and sends it back to main for review
 func serviceAssignments(G *Core.Network, localAssignmentChannel <-chan []coloring, coloringChannel chan<- []coloring) {
 	// depending on the timing, a goroutine may send on the main coloring channel after it has been closed, hence this call

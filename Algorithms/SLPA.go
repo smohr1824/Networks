@@ -31,10 +31,9 @@ package Algorithms
 
 import (
 	"github.com/smohr1824/Networks/Core"
-	//"fmt"
-	"time"
 	"math/rand"
 	"sync"
+	"time"
 )
 
 // message used by a goroutine to communicate which iteration it is on to the main calling routine, or for
@@ -119,7 +118,7 @@ func ConcurrentSLPA(G *Core.Network, iterations int, threshold float64, seed int
 		for _, nodeId := range partition {
 			hasExternalDependencies := false
 			nodeNeighbors := G.GetNeighbors(nodeId)
-			for neighbor, _ := range nodeNeighbors {
+			for neighbor := range nodeNeighbors {
 				indexInVertices := vertIdx[neighbor]
 				low := partitionLows[partitionIdx]
 				if indexInVertices < low || indexInVertices >= low + partSize {
@@ -257,7 +256,7 @@ func DoOneIteration(nodes *[]uint32, G *Core.Network, indices *[]int, nodeLabels
 		if len(neighbors) == 0 {
 			continue
 		}
-		for neighbor, _ := range neighbors {
+		for neighbor := range neighbors {
 			labelMap, ok := nodeLabels.Load(neighbor)
 			if ok {
 				m := labelMap.(*sync.Map)
@@ -393,15 +392,6 @@ func ApplyThreshold(labelset *sync.Map, threshold float64) {
 
 }
 
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
-
 func intInSlice(i int, list []int) bool{
 	for _, b := range list {
 		if b == i {
@@ -409,15 +399,6 @@ func intInSlice(i int, list []int) bool{
 		}
 	}
 	return false
-}
-
-func indexStringInSlice(a string, list []string) int {
-	for i, b := range list {
-		if b == a {
-			return i
-		}
-	}
-	return -1
 }
 
 func DependenciesNotReady(myiteration int, deps []int, iterations []int) bool {

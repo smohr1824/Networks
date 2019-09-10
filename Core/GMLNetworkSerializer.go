@@ -53,7 +53,7 @@ func ReadNetworkFromFile(filename string) (*Network, error) {
 		return nil, err
 	}
 	defer f.Close()
-	f.Seek(0, io.SeekStart)
+	_, _ = f.Seek(0, io.SeekStart)
 	reader := bufio.NewReader(f)
 
 	return ReadNetwork(reader)
@@ -72,7 +72,7 @@ func ReadNetwork(reader *bufio.Reader) (*Network, error) {
 			return net, err
 		}
 	}
-	return nil, errors.New("Top level structure wrong, could not read GML network")
+	return nil, errors.New("top level structure wrong, could not read GML network")
 }
 
 func processGraph(reader *bufio.Reader) (*Network, error) {
@@ -88,7 +88,7 @@ func processGraph(reader *bufio.Reader) (*Network, error) {
 		if err != nil {
 			break
 		} else {
-			reader.UnreadRune()
+			_ = reader.UnreadRune()
 		}
 		gmlTokenizer.EatWhitespace(reader)
 		token := gmlTokenizer.ReadNextToken(reader)
@@ -114,10 +114,10 @@ func processGraph(reader *bufio.Reader) (*Network, error) {
 							net.AddVertex(id)
 						}
 					} else {
-						return nil, errors.New("Missing node id")
+						return nil, errors.New("missing node id")
 					}
 				} else {
-					return nil, errors.New("Node record found out of place in file")
+					return nil, errors.New("node record found out of place in file")
 				}
 
 			case "edge":
@@ -134,13 +134,13 @@ func processGraph(reader *bufio.Reader) (*Network, error) {
 						if err1 == nil && err2 == nil && err3 == nil {
 							err := net.AddEdge(srcId, tgtId, wtVal)
 							if err != nil {
-								return nil, errors.New("Error adding edge")
+								return nil, errors.New("error adding edge")
 							}
 						}
 					}
 
 				} else {
-					return nil, errors.New("Edge record found out of order in file")
+					return nil, errors.New("edge record found out of order in file")
 				}
 
 			case "]":
@@ -153,7 +153,7 @@ func processGraph(reader *bufio.Reader) (*Network, error) {
 	}
 
 	if !created {
-		return nil, errors.New("Network not created, directed property not found")
+		return nil, errors.New("network not created, directed property not found")
 	}
 	return net, nil
 }

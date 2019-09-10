@@ -90,12 +90,8 @@ func TestVertexBasic(t *testing.T) {
 	}
 
 	n := N.OutDegree(1)
-	if err != nil {
-		t.Errorf(err.Error())
-	} else {
-		if n != 3 {
+	if n != 3 {
 			t.Error("Wrong number of out edges from vertex 1")
-		}
 	}
 
 	N.RemoveVertex(3)
@@ -123,30 +119,30 @@ func TestSize(t *testing.T) {
 
 func TestDensity(t *testing.T) {
 	G := NewNetwork(true)
-	err := G.AddEdge(1, 2, 1);
-	err = G.AddEdge(1, 3, 1);
-	err = G.AddEdge(2, 3, 2);
-	err = G.AddEdge(1, 4, 3);
+	err := G.AddEdge(1, 2, 1)
+	err = G.AddEdge(1, 3, 1)
+	err = G.AddEdge(2, 3, 2)
+	err = G.AddEdge(1, 4, 3)
 
 	if err != nil {
 		panic(err)
 	}
 	density := G.Density()
-	if math.Abs((0.33 - density)) > 0.01 {
+	if math.Abs(0.33 - density) > 0.01 {
 		t.Errorf("Wrong density computed for directed graph.  Expected 0.33, got %f.", density)
 	}
 
-	G = NewNetwork(false);
-	err = G.AddEdge(1, 2, 1);
-	err = G.AddEdge(1, 3, 1);
-	err = G.AddEdge(2, 3, 2);
-	err = G.AddEdge(1, 4, 3);
+	G = NewNetwork(false)
+	err = G.AddEdge(1, 2, 1)
+	err = G.AddEdge(1, 3, 1)
+	err = G.AddEdge(2, 3, 2)
+	err = G.AddEdge(1, 4, 3)
 
 	if err != nil {
 		panic(err)
 	}
 	density = G.Density()
-	if math.Abs((0.66 - density)) > 0.01 {
+	if math.Abs(0.66 - density) > 0.01 {
 		t.Errorf("Wrong density computed for undirected graph.  Expected 0.66, got %f.", density)
 	}
 }
@@ -155,13 +151,14 @@ func makeSimple(directed bool) *Network {
 	G := NewNetwork(directed)
 	err := G.AddEdge(1, 2, 1.0)
 	err = G.AddEdge(1, 3, 1.0)
-	err = G.AddEdge(1, 6, 1.0);
-	err = G.AddEdge(2, 4, 1.0);
-	err = G.AddEdge(4, 6, 1.0);
-	err = G.AddEdge(3, 5, 1.0);
-	err = G.AddEdge(5, 6, 1.0);
-	err = G.AddEdge(2, 5, 1.0);
-	err = G.AddEdge(3, 4, 1.0);if err != nil {
+	err = G.AddEdge(1, 6, 1.0)
+	err = G.AddEdge(2, 4, 1.0)
+	err = G.AddEdge(4, 6, 1.0)
+	err = G.AddEdge(3, 5, 1.0)
+	err = G.AddEdge(5, 6, 1.0)
+	err = G.AddEdge(2, 5, 1.0)
+	err = G.AddEdge(3, 4, 1.0)
+	if err != nil {
 		panic(err)
 	}
 	return G

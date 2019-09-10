@@ -24,16 +24,16 @@
 package Core
 
 import (
+	"bufio"
 	"errors"
 	. "fmt"
-	"bufio"
-	"strconv"
 	"sort"
+	"strconv"
 )
 
-type AdjacencyList struct {
-	Weights map[uint32]float32
-}
+//type AdjacencyList struct {
+//	Weights map[uint32]float32
+//}
 type Network struct {
 	inEdges map[uint32] map[uint32]float32
 	outEdges map[uint32] map[uint32]float32
@@ -133,7 +133,7 @@ func (network *Network) Density() float64 {
 	edgeCt := network.countEdges()
 	order := len(network.outEdges)
 	retVal := float64(edgeCt)/float64(order * (order - 1))
-	if (!network.Directed()) {
+	if !network.Directed() {
 		retVal = 2 * retVal
 	}
 
@@ -146,7 +146,7 @@ func (network *Network) Size() int {
 
 func (network *Network) AdjacencyMatrix() [][]float32 {
 	order := network.Order()
-	A:=[][]float32{}
+	var A  [][]float32
 	for i := 0; i < order; i++ {
 		A = append(A, make([]float32, order))
 	}
@@ -162,7 +162,7 @@ func (network *Network) AdjacencyMatrix() [][]float32 {
 	}
 
 	// Need to pick up the in edges to reflect all neighbors in an undirected network
-	if (!network.Directed()) {
+	if !network.Directed() {
 		for i := range vertices {
 			for to, wt := range network.inEdges[vertices[i]] {
 				j := network.locOf(vertices, to)
@@ -215,7 +215,7 @@ func (network *Network) RemoveVertex(id uint32) {
 }
 
 func (network *Network) AddEdge(from uint32, to uint32,  weight float32) error {
-	if (from == to) {
+	if from == to {
 		return NewNetworkArgumentError(Sprintf("Self-edges are not permitted (vertex %d)", from))
 	}
 
@@ -309,7 +309,7 @@ func (network *Network) HasEdge(from uint32, to uint32) bool {
 	adjList, contained := network.outEdges[from]
 	if contained {
 		_, contained2 := adjList[to]
-		if (contained2) {
+		if contained2 {
 			return true
 		} else {
 			if !network.Directed() {
@@ -473,7 +473,7 @@ func (network *Network) ListGML(writer *bufio.Writer, level int) error {
 		return err
 	}
 	err = network.ListGMLNodes(writer, basicIndent)
-	if (err != nil) {
+	if err != nil {
 		return err
 	}
 	err = network.ListGMLEdges(writer, basicIndent)
@@ -517,7 +517,7 @@ func (network *Network) indentForLevel(level int) string {
 func (network *Network) StartingVertex(connected bool) (uint32, error) {
 	// map keys in Go are always randomized, so grab the first vertex with outgoing edges in the iteration
 	for key, val := range network.outEdges {
-		if (connected){
+		if connected {
 			// if we are looking for a vertex with outgoing edges, check the length of the adjacency list
 			if len(val) > 0 {
 				return key, nil
@@ -528,7 +528,7 @@ func (network *Network) StartingVertex(connected bool) (uint32, error) {
 		}
 	}
 
-	return 0, errors.New("Requested connected starting vertex in a disconnected network")
+	return 0, errors.New("requested connected starting vertex in a disconnected network")
 }
 
 // end public

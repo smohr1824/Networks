@@ -87,7 +87,7 @@ func (c *MultilayerFuzzyCognitiveMap) ListLayers() []string {
 func (c *MultilayerFuzzyCognitiveMap) ListConcepts() []string {
 	keys := make([]uint32, len(c.concepts))
 	i := 0
-	for id, _ := range c.concepts {
+	for id := range c.concepts {
 		keys[i] = id
 		i++
 	}

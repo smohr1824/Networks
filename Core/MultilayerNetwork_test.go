@@ -120,13 +120,13 @@ func TestBasicMultilayer(t *testing.T) {
 	}
 
 	//WriteMultilayerNetworkToFile(Q, "multilayer_test.gml")
-	ct := Q.Order()
+	var ct = Q.Order()
 	if ct != 5 {
 		t.Errorf("Expected order of 5, got %d", ct)
 	}
 
 	nlt1 := NewNodeLayerTuple(2,"electrical,SLTC")
-	dg := Q.Degree(*nlt1)
+	var dg = Q.Degree(*nlt1)
 	if dg != 3 {
 		t.Errorf("Degree for node %s: expected 3, found %d", nlt1.ToString(), dg)
 	}
@@ -137,7 +137,7 @@ func TestBasicMultilayer(t *testing.T) {
 		t.Errorf("Degree for node %s: expected 3, found %d", nlt2.ToString(), dg)
 	}
 
-	m := Q.GetNeighbors(*nlt2)
+	var m = Q.GetNeighbors(*nlt2)
 	if len(m) != 3 {
 		t.Errorf("GetNeighbors for %s found %d, expected 3", nlt2.ToString(), len(m))
 	}
@@ -223,7 +223,7 @@ func TestMultilayerNeighbors(t *testing.T) {
 	_, ok3 := n[*nlt3]
 	if !ok1 || !ok2 || !ok3 {
 		t.Errorf("One or more explicit neighbors missing")
-		for ngbr, _ := range n {
+		for ngbr := range n {
 			t.Logf("Neighbor: %d in layer %s", ngbr.NodeId, ngbr.Coordinates)
 		}
 	}
