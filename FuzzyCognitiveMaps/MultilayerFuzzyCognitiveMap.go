@@ -30,21 +30,21 @@ import (
 )
 
 type MultilayerFuzzyCognitiveMap struct {
-	concepts map[uint32] *MultilayerCognitiveConcept
-	reverseLookup map[string] uint32
-	nextNodeId uint32
+	concepts      map[uint32]*MultilayerCognitiveConcept
+	reverseLookup map[string]uint32
+	nextNodeId    uint32
 	// not doing state calculation algebraically allows us to drop the current concepts property from the C# library
-	model Core.MultilayerNetwork
+	model         Core.MultilayerNetwork
 	modifiedKosko bool
-	tfunc ThresholdFunc
-	threshold ThresholdType
+	tfunc         ThresholdFunc
+	threshold     ThresholdType
 }
 
-func NewMultilayerFuzzyCognitiveMapDefault(aspects []string, indices [][]string, ) *MultilayerFuzzyCognitiveMap {
+func NewMultilayerFuzzyCognitiveMapDefault(aspects []string, indices [][]string) *MultilayerFuzzyCognitiveMap {
 	retVal := new(MultilayerFuzzyCognitiveMap)
-	retVal.concepts = make(map[uint32] *MultilayerCognitiveConcept)
-	retVal.reverseLookup = make(map[string] uint32)
-	retVal.model = *Core.NewMultilayerNetwork(aspects, indices,true)
+	retVal.concepts = make(map[uint32]*MultilayerCognitiveConcept)
+	retVal.reverseLookup = make(map[string]uint32)
+	retVal.model = *Core.NewMultilayerNetwork(aspects, indices, true)
 	retVal.threshold = Bivalent
 	retVal.tfunc = bivalent
 	retVal.modifiedKosko = false
@@ -54,8 +54,8 @@ func NewMultilayerFuzzyCognitiveMapDefault(aspects []string, indices [][]string,
 
 func NewMultilayerFuzzyCognitiveMap(aspects []string, indices [][]string, useModifiedKosko bool, thresholdType ThresholdType) *MultilayerFuzzyCognitiveMap {
 	retVal := new(MultilayerFuzzyCognitiveMap)
-	retVal.concepts = make(map[uint32] *MultilayerCognitiveConcept)
-	retVal.reverseLookup = make(map[string] uint32)
+	retVal.concepts = make(map[uint32]*MultilayerCognitiveConcept)
+	retVal.reverseLookup = make(map[string]uint32)
 	retVal.model = *Core.NewMultilayerNetwork(aspects, indices, true)
 	switch thresholdType {
 	case Bivalent:
@@ -65,7 +65,7 @@ func NewMultilayerFuzzyCognitiveMap(aspects []string, indices [][]string, useMod
 	case Logistic:
 		retVal.tfunc = logistic
 	case Custom:
-		retVal.tfunc = nil	// you're going to want to BE SURE to set the threshold function
+		retVal.tfunc = nil // you're going to want to BE SURE to set the threshold function
 	default:
 		retVal.tfunc = nil
 	}
@@ -75,7 +75,7 @@ func NewMultilayerFuzzyCognitiveMap(aspects []string, indices [][]string, useMod
 	return retVal
 }
 
-func (c *MultilayerFuzzyCognitiveMap) Concepts() map[uint32] *MultilayerCognitiveConcept {
+func (c *MultilayerFuzzyCognitiveMap) Concepts() map[uint32]*MultilayerCognitiveConcept {
 	return c.concepts
 }
 
@@ -92,7 +92,7 @@ func (c *MultilayerFuzzyCognitiveMap) ListConcepts() []string {
 		i++
 	}
 	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
-	cons := make([]string,len(keys))
+	cons := make([]string, len(keys))
 	for k := 0; k < len(keys); k++ {
 		cons[k] = c.concepts[keys[k]].Name
 	}
@@ -112,10 +112,10 @@ func (c *MultilayerFuzzyCognitiveMap) ReportAggregateLevel(concept string) (floa
 	}
 }
 
-func (c *MultilayerFuzzyCognitiveMap) ReportLayerLevels(concept string) (map[string] float32, error) {
+func (c *MultilayerFuzzyCognitiveMap) ReportLayerLevels(concept string) (map[string]float32, error) {
 	conceptId, ok := c.reverseLookup[concept]
 	// make a copy of the layer activation levels
-	levels := make(map[string] float32)
+	levels := make(map[string]float32)
 	if ok {
 		for k, v := range c.concepts[conceptId].layerActivationLevels {
 			levels[k] = v
@@ -182,7 +182,7 @@ func (c *MultilayerFuzzyCognitiveMap) DeleteConcept(conceptName string, coords s
 	if ok {
 		delete(c.reverseLookup, conceptName)
 		layers := c.concepts[id].GetLayers()
-		for _,layer := range layers {
+		for _, layer := range layers {
 			tuple := Core.NewNodeLayerTuple(id, layer)
 			_, _ = c.model.RemoveVertex(*tuple)
 		}
@@ -241,10 +241,10 @@ func (c *MultilayerFuzzyCognitiveMap) GetConceptLayerActivationLevel(conceptName
 	}
 }
 
-func (c *MultilayerFuzzyCognitiveMap) GetLayerActivationLevels(coords string) (map[string] float32, error) {
+func (c *MultilayerFuzzyCognitiveMap) GetLayerActivationLevels(coords string) (map[string]float32, error) {
 	if c.model.HasElementaryLayer(coords) {
 		iverts, _ := c.model.VerticesInLayer(coords)
-		levels := make(map[string] float32)
+		levels := make(map[string]float32)
 		for _, vertId := range iverts {
 			concept, _ := c.concepts[vertId]
 			layerLevel, _ := c.GetConceptLayerActivationLevel(concept.Name, coords)
@@ -257,7 +257,7 @@ func (c *MultilayerFuzzyCognitiveMap) GetLayerActivationLevels(coords string) (m
 }
 
 func (c *MultilayerFuzzyCognitiveMap) Step() {
-	nextConceptLevels := make(map[uint32] *MultilayerCognitiveConcept)
+	nextConceptLevels := make(map[uint32]*MultilayerCognitiveConcept)
 
 	for conceptId, concept := range c.concepts {
 		next := NewMultilayerCognitiveConcept(concept.Name, 0.0, 0.0)
@@ -272,7 +272,7 @@ func (c *MultilayerFuzzyCognitiveMap) Step() {
 			}
 			if c.modifiedKosko {
 				val, _ := c.concepts[conceptId].GetLayerActivationLevel(layer)
-				next.setLayerLevel(layer, c.tfunc(val + sum))
+				next.setLayerLevel(layer, c.tfunc(val+sum))
 			} else {
 				next.setLayerLevel(layer, c.tfunc(sum))
 			}
@@ -295,8 +295,8 @@ func (c *MultilayerFuzzyCognitiveMap) Step() {
 
 	for id, concept := range nextConceptLevels {
 		c.concepts[id].ActivationLevel = concept.ActivationLevel
-		for _,layer := range concept.GetLayers() {
-			newVal, _:= concept.GetLayerActivationLevel(layer)
+		for _, layer := range concept.GetLayers() {
+			newVal, _ := concept.GetLayerActivationLevel(layer)
 			c.concepts[id].setLayerLevel(layer, newVal)
 		}
 	}
@@ -335,15 +335,15 @@ func (c *MultilayerFuzzyCognitiveMap) ListGML(writer *bufio.Writer) error {
 	aspects := c.model.Aspects()
 	for _, aspect := range aspects {
 		indices := c.model.Indices(aspect)
-		_, err = Fprint(writer, "\t\t" + aspect + " ")
+		_, err = Fprint(writer, "\t\t"+aspect+" \"")
 		sindices := ""
 		for k, index := range indices {
 			sindices += index
-			if k < len(indices) - 1 {
+			if k < len(indices)-1 {
 				sindices += ","
 			}
 		}
-		_, err = Fprintln(writer, sindices)
+		_, err = Fprintln(writer, sindices+"\"")
 	}
 	Fprintln(writer, "\t]")
 
@@ -354,7 +354,7 @@ func (c *MultilayerFuzzyCognitiveMap) ListGML(writer *bufio.Writer) error {
 		concept := c.concepts[conceptId]
 		Fprintln(writer, "\t concept [")
 		Fprintln(writer, Sprintf("\t\tid %d", conceptId))
-		Fprintln(writer, "\t\tlabel \"" + concept.Name + "\"")
+		Fprintln(writer, "\t\tlabel \""+concept.Name+"\"")
 		Fprintln(writer, Sprintf("\t\tinitial %.4f", concept.initialValue))
 		Fprintln(writer, Sprintf("\t\taggregate %.4f", concept.ActivationLevel))
 		Fprintln(writer, "\t\tlevels [")
@@ -377,7 +377,7 @@ func (c *MultilayerFuzzyCognitiveMap) recomputeAggregateActivationLevel(conceptN
 	if ok {
 		total := float32(0.0)
 		concept := c.concepts[id]
-		for _,layer := range concept.GetLayers() {
+		for _, layer := range concept.GetLayers() {
 			f, _ := concept.GetLayerActivationLevel(layer)
 			total += f
 		}
@@ -389,4 +389,3 @@ func (c *MultilayerFuzzyCognitiveMap) recomputeAggregateActivationLevel(conceptN
 		}
 	}
 }
-

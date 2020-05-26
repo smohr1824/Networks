@@ -32,14 +32,14 @@ import (
 )
 
 type MultilayerNetwork struct {
-	aspects []string  // e.g., {"location","type"}
-	indices [][]string  // e.g.,
-	directed bool
-	elementaryLayers map[string] *elementaryLayer
-	nodeIdsAndLayers map[uint32] []*elementaryLayer
+	aspects          []string   // e.g., {"location","type"}
+	indices          [][]string // e.g.,
+	directed         bool
+	elementaryLayers map[string]*elementaryLayer
+	nodeIdsAndLayers map[uint32][]*elementaryLayer
 }
 
-func NewMultilayerNetwork(aspects []string, indices[][]string, isdirected bool) *MultilayerNetwork {
+func NewMultilayerNetwork(aspects []string, indices [][]string, isdirected bool) *MultilayerNetwork {
 	p := new(MultilayerNetwork)
 	p.directed = isdirected
 	if aspects != nil && indices != nil {
@@ -52,8 +52,8 @@ func NewMultilayerNetwork(aspects []string, indices[][]string, isdirected bool) 
 			}
 		}
 	}
-	p.elementaryLayers = make(map[string] *elementaryLayer)
-	p.nodeIdsAndLayers = make(map[uint32] []*elementaryLayer)
+	p.elementaryLayers = make(map[string]*elementaryLayer)
+	p.nodeIdsAndLayers = make(map[uint32][]*elementaryLayer)
 
 	return p
 }
@@ -228,8 +228,8 @@ func (p *MultilayerNetwork) GetVertexInstances(id uint32) []NodeLayerTuple {
 	return retVal
 }
 
-func (p *MultilayerNetwork) GetNeighbors(vertex NodeLayerTuple) map[NodeLayerTuple] float32 {
-	retVal := make(map[NodeLayerTuple] float32)
+func (p *MultilayerNetwork) GetNeighbors(vertex NodeLayerTuple) map[NodeLayerTuple]float32 {
+	retVal := make(map[NodeLayerTuple]float32)
 	_, ok := p.nodeIdsAndLayers[vertex.NodeId]
 	if !ok {
 		return retVal
@@ -259,8 +259,8 @@ func (p *MultilayerNetwork) GetNeighbors(vertex NodeLayerTuple) map[NodeLayerTup
 	return retVal
 }
 
-func (p *MultilayerNetwork) GetSources(vertex NodeLayerTuple, coupled bool) map[NodeLayerTuple] float32 {
-	retVal := make(map[NodeLayerTuple] float32)
+func (p *MultilayerNetwork) GetSources(vertex NodeLayerTuple, coupled bool) map[NodeLayerTuple]float32 {
+	retVal := make(map[NodeLayerTuple]float32)
 	_, ok := p.nodeIdsAndLayers[vertex.NodeId]
 	if !ok {
 		return retVal
@@ -289,8 +289,8 @@ func (p *MultilayerNetwork) GetSources(vertex NodeLayerTuple, coupled bool) map[
 	return retVal
 }
 
-func (p *MultilayerNetwork) CategoricalGetNeighbors(vertex NodeLayerTuple, aspectCategory string, ordinal bool) map[NodeLayerTuple] float32 {
-	retVal := make(map[NodeLayerTuple] float32)
+func (p *MultilayerNetwork) CategoricalGetNeighbors(vertex NodeLayerTuple, aspectCategory string, ordinal bool) map[NodeLayerTuple]float32 {
+	retVal := make(map[NodeLayerTuple]float32)
 	_, ok := p.nodeIdsAndLayers[vertex.NodeId]
 	if !ok {
 		return retVal
@@ -324,7 +324,7 @@ func (p *MultilayerNetwork) CategoricalGetNeighbors(vertex NodeLayerTuple, aspec
 		ilResolved := make([]int, len(resolved))
 		iResolved := make([]int, len(resolved))
 
-		for i:= 0; i < len(resolved); i++ {
+		for i := 0; i < len(resolved); i++ {
 			il, err1 := strconv.Atoi(lResolved[i])
 			ir, err2 := strconv.Atoi(resolved[i])
 			if err1 != nil || err2 != nil {
@@ -348,7 +348,7 @@ func (p *MultilayerNetwork) CategoricalGetNeighbors(vertex NodeLayerTuple, aspec
 		}
 
 		// any layer that survives to this point is in aspect, see if it is ordinal if required
-		if abs(iResolved[indexOfAspect] - ilResolved[indexOfAspect]) > epsilon {
+		if abs(iResolved[indexOfAspect]-ilResolved[indexOfAspect]) > epsilon {
 			continue
 		}
 
@@ -360,8 +360,8 @@ func (p *MultilayerNetwork) CategoricalGetNeighbors(vertex NodeLayerTuple, aspec
 	return retVal
 }
 
-func (p *MultilayerNetwork) CategoricalGetSources(vertex NodeLayerTuple, aspectCategory string, ordinal bool) map[NodeLayerTuple] float32 {
-	retVal := make(map[NodeLayerTuple] float32)
+func (p *MultilayerNetwork) CategoricalGetSources(vertex NodeLayerTuple, aspectCategory string, ordinal bool) map[NodeLayerTuple]float32 {
+	retVal := make(map[NodeLayerTuple]float32)
 	_, ok := p.nodeIdsAndLayers[vertex.NodeId]
 	if !ok {
 		return retVal
@@ -395,7 +395,7 @@ func (p *MultilayerNetwork) CategoricalGetSources(vertex NodeLayerTuple, aspectC
 		ilResolved := make([]int, len(resolved))
 		iResolved := make([]int, len(resolved))
 
-		for i:= 0; i < len(resolved); i++ {
+		for i := 0; i < len(resolved); i++ {
 			il, err1 := strconv.Atoi(lResolved[i])
 			ir, err2 := strconv.Atoi(resolved[i])
 			if err1 != nil || err2 != nil {
@@ -419,7 +419,7 @@ func (p *MultilayerNetwork) CategoricalGetSources(vertex NodeLayerTuple, aspectC
 		}
 
 		// any layer that survives to this point is in aspect, see if it is ordinal if required
-		if abs(iResolved[indexOfAspect] - ilResolved[indexOfAspect]) > epsilon {
+		if abs(iResolved[indexOfAspect]-ilResolved[indexOfAspect]) > epsilon {
 			continue
 		}
 
@@ -439,12 +439,12 @@ func (p *MultilayerNetwork) UnaliasCoordinates(rcoords string) string {
 		if err != nil {
 			return ""
 		}
-		if icoord > len(p.indices[i]) - 1 {
+		if icoord > len(p.indices[i])-1 {
 			return ""
 		} else {
 			retVal += p.indices[i][icoord]
 		}
-		if i < len(p.aspects) - 1 {
+		if i < len(p.aspects)-1 {
 			retVal += ","
 		}
 	}
@@ -495,8 +495,8 @@ func (p *MultilayerNetwork) ListGML(writer *bufio.Writer) {
 	Fprintln(writer, "\taspects")
 
 	for i := 0; i < len(p.aspects); i++ {
-		Fprint(writer, "\t\t" + p.aspects[i] + " ")
-		Fprintln(writer, strings.Join(p.indices[i], ","))
+		Fprint(writer, "\t\t"+p.aspects[i]+" \"")
+		Fprintln(writer, strings.Join(p.indices[i], ",")+"\"")
 	}
 	Fprintln(writer, "\t]")
 
@@ -504,7 +504,7 @@ func (p *MultilayerNetwork) ListGML(writer *bufio.Writer) {
 	for coords, layer := range p.elementaryLayers {
 		Fprintln(writer, "\tlayer [")
 		aspectCoords := p.UnaliasCoordinates(coords)
-		Fprintln(writer, "\t\tcoordinates " + aspectCoords)
+		Fprintln(writer, "\t\tcoordinates \""+aspectCoords+"\"")
 		layer.ListGML(writer, 2)
 		Fprintln(writer, "\t]")
 	}
@@ -520,7 +520,7 @@ func (p *MultilayerNetwork) ListAllLayersGML(writer *bufio.Writer, level int) {
 	for coords, layer := range p.elementaryLayers {
 		Fprintln(writer, "\tlayer [")
 		aspectCoords := p.UnaliasCoordinates(coords)
-		Fprintln(writer, "\t\tcoordinates " + aspectCoords)
+		Fprintln(writer, "\t\tcoordinates \""+aspectCoords+"\"")
 		layer.ListGML(writer, level)
 		Fprintln(writer, "\t]")
 	}
@@ -542,17 +542,17 @@ func (p *MultilayerNetwork) AddVertex(vertex NodeLayerTuple) (bool, error) {
 		return false, NewNetworkArgumentError("Elementary layer does not exist at " + rVertex.Coordinates)
 	}
 
-	layer, _ := p.elementaryLayers[rVertex.Coordinates]		// already know the layer exists from the previous test
+	layer, _ := p.elementaryLayers[rVertex.Coordinates] // already know the layer exists from the previous test
 	if !layer.HasVertex(rVertex.NodeId) {
 		layer.AddVertex(rVertex.NodeId)
 
 		layers, ok := p.nodeIdsAndLayers[rVertex.NodeId]
 		if !ok {
-			layerList := make([] *elementaryLayer, 1)
+			layerList := make([]*elementaryLayer, 1)
 			layerList[0] = layer
 			p.nodeIdsAndLayers[rVertex.NodeId] = layerList
 		} else {
-			if p.layerLoc(layers, *layer)  != -1 {
+			if p.layerLoc(layers, *layer) != -1 {
 				layers = append(layers, layer)
 			}
 		}
@@ -578,9 +578,9 @@ func (p *MultilayerNetwork) RemoveVertex(vertex NodeLayerTuple) (bool, error) {
 		layers, _ := p.nodeIdsAndLayers[rVertex.NodeId]
 		loc := p.layerLoc(layers, *layer)
 		if loc != -1 {
-			layers[loc] = layers[len(layers) - 1]
-			layers[len(layers) - 1] = nil		// turn last into nil
-			layers = layers[:len(layers) - 1]
+			layers[loc] = layers[len(layers)-1]
+			layers[len(layers)-1] = nil // turn last into nil
+			layers = layers[:len(layers)-1]
 		}
 		if len(layers) == 0 {
 			delete(p.nodeIdsAndLayers, rVertex.NodeId)
@@ -613,13 +613,13 @@ func (p *MultilayerNetwork) AddEdge(from NodeLayerTuple, to NodeLayerTuple, wt f
 	_, ok := p.nodeIdsAndLayers[from.NodeId]
 	if !ok {
 		// add an entry for the node
-		layers := make([] *elementaryLayer, 1)
+		layers := make([]*elementaryLayer, 1)
 		p.nodeIdsAndLayers[from.NodeId] = layers
 	}
 
 	_, ok = p.nodeIdsAndLayers[to.NodeId]
 	if !ok {
-		layers := make([] *elementaryLayer, 1)
+		layers := make([]*elementaryLayer, 1)
 		p.nodeIdsAndLayers[to.NodeId] = layers
 	}
 
@@ -630,7 +630,7 @@ func (p *MultilayerNetwork) AddEdge(from NodeLayerTuple, to NodeLayerTuple, wt f
 			if ok {
 				p.nodeIdsAndLayers[rFrom.NodeId] = append(p.nodeIdsAndLayers[rFrom.NodeId], fromLayer)
 			} else {
-				layers := make([] *elementaryLayer, 1)
+				layers := make([]*elementaryLayer, 1)
 				layers = append(layers, fromLayer)
 				p.nodeIdsAndLayers[rFrom.NodeId] = layers
 			}
@@ -641,7 +641,7 @@ func (p *MultilayerNetwork) AddEdge(from NodeLayerTuple, to NodeLayerTuple, wt f
 			if ok {
 				p.nodeIdsAndLayers[rTo.NodeId] = append(p.nodeIdsAndLayers[rTo.NodeId], fromLayer)
 			} else {
-				layers := make([] *elementaryLayer, 1)
+				layers := make([]*elementaryLayer, 1)
 				layers = append(layers, fromLayer)
 				p.nodeIdsAndLayers[rTo.NodeId] = layers
 			}
@@ -700,7 +700,7 @@ func (p *MultilayerNetwork) MakeSupraAdjacencyMatrix() [][]float32 {
 	aspect := p.aspects[0]
 
 	// build an ordered, hierarchical list of all elementary layer indices
-	coords := make([]string,0)
+	coords := make([]string, 0)
 	for _, mark := range p.indices[0] {
 		coords = append(coords, mark)
 		p.recurseAdjacencyMatrix(&layerList, aspect, 0, 0, &coords)
@@ -737,7 +737,6 @@ func (p *MultilayerNetwork) GetLayer(layerCoordinates string) *Network {
 	return p.elementaryLayers[resolved].CopyNetwork()
 }
 
-
 func (p *MultilayerNetwork) indentForLevel(level int) string {
 	retVal := ""
 	for i := 0; i < level; i++ {
@@ -747,7 +746,7 @@ func (p *MultilayerNetwork) indentForLevel(level int) string {
 }
 
 func (p *MultilayerNetwork) elementaryLayerExists(rcoordinates string) bool {
-	_, ok :=  p.elementaryLayers[rcoordinates]
+	_, ok := p.elementaryLayers[rcoordinates]
 	return ok
 }
 
@@ -785,9 +784,9 @@ func (p *MultilayerNetwork) removeElementaryLayerFromMultilayerNetwork(resolved 
 				}
 				if i < len(layers) {
 					// remove the ith layer by copying down the rest of the slice
-					layers[i] = layers[len(layers) - 1]
-					layers[len(layers) - 1] = nil		// turn last into nil
-					layers = layers[:len(layers) - 1]	// truncate
+					layers[i] = layers[len(layers)-1]
+					layers[len(layers)-1] = nil     // turn last into nil
+					layers = layers[:len(layers)-1] // truncate
 				}
 			}
 		}
@@ -803,7 +802,7 @@ func (p *MultilayerNetwork) resolveNodeLayerTuple(tuple NodeLayerTuple) (resolve
 	if err == nil {
 		return resolvedNodeLayerTuple{NodeId: tuple.NodeId, Coordinates: coordinates}, nil
 	} else {
-		return resolvedNodeLayerTuple{NodeId:0, Coordinates:""}, NewNetworkArgumentError(tuple.Coordinates + " cannot be found in the network")
+		return resolvedNodeLayerTuple{NodeId: 0, Coordinates: ""}, NewNetworkArgumentError(tuple.Coordinates + " cannot be found in the network")
 	}
 }
 
@@ -817,13 +816,13 @@ func (p *MultilayerNetwork) resolveCoordinates(coordinateString string) (string,
 	}
 	s := ""
 	index := 0
-	for i:= 0; i < len(indices); i++ {
+	for i := 0; i < len(indices); i++ {
 		index = p.locOf(p.indices[i], indices[i])
 		if index == -1 {
 			return "", errors.New(Sprintf("Index %s not found for aspect %s", indices[i], p.aspects[i]))
 		}
 		s += strconv.Itoa(index)
-		if i < len(indices) -1 {
+		if i < len(indices)-1 {
 			s += ","
 		}
 	}
@@ -841,7 +840,7 @@ func (p *MultilayerNetwork) locOf(col []string, item string) int {
 	return -1
 }
 
-func (p *MultilayerNetwork) layerLoc(layers [] *elementaryLayer, layer elementaryLayer) int {
+func (p *MultilayerNetwork) layerLoc(layers []*elementaryLayer, layer elementaryLayer) int {
 	for i := 0; i < len(layers); i++ {
 		if layers[i].layerCoordinates == layer.layerCoordinates {
 			return i
@@ -864,11 +863,11 @@ func (p *MultilayerNetwork) getDimension() int {
 // enumerates its indices once
 func (p *MultilayerNetwork) recurseAdjacencyMatrix(allCoords *[][]string, aspect string, blockRow int, blockColumn int, layerCoords *[]string) {
 	index := p.locOf(p.aspects, aspect) + 1
-	if index == len(p.aspects) - 1 {
+	if index == len(p.aspects)-1 {
 		// innermost aspect
 		for _, stop := range p.indices[index] {
 			//elemLayerCoords := make([]string, len(*layerCoords))
-			elemLayerCoords :=make([]string, 0)
+			elemLayerCoords := make([]string, 0)
 			// concatenate layerCoords to the end of elemLayerCoords
 			elemLayerCoords = append(elemLayerCoords, *layerCoords...)
 			elemLayerCoords = append(elemLayerCoords, stop)
@@ -880,7 +879,7 @@ func (p *MultilayerNetwork) recurseAdjacencyMatrix(allCoords *[][]string, aspect
 			*layerCoords = append(*layerCoords, stop)
 			p.recurseAdjacencyMatrix(allCoords, curAspect, blockRow, blockColumn, layerCoords)
 			// delete the first entry of layerCoords by copying the remaining slice down one element
-			*layerCoords = (*layerCoords)[:len(*layerCoords) - 1]
+			*layerCoords = (*layerCoords)[:len(*layerCoords)-1]
 
 		}
 	}
@@ -893,7 +892,7 @@ func (p *MultilayerNetwork) insertLayerAdjacencies(supra [][]float32, layerMatri
 
 	for i := 0; i < size; i++ {
 		for j := 0; j < size; j++ {
-			supra[rowOffset + i][colOffset + j] = layerMatrix[i][j]
+			supra[rowOffset+i][colOffset+j] = layerMatrix[i][j]
 		}
 	}
 }
