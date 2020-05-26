@@ -39,6 +39,23 @@ func TestBasicMLFCM(t *testing.T) {
 	}
 }
 
+func TestResetMLFCM(t *testing.T) {
+	fcm := BuildMLBasic()
+	for i := 1; i < 4; i++ {
+		fcm.Step()
+	}
+
+	fcm.Reset()
+	for _, concept := range fcm.Concepts() {
+		for _, value := range concept.layerActivationLevels {
+			if value != concept.initialValue {
+				t.Error("Value not reset for " + concept.Name)
+			}
+		}
+	}
+
+}
+
 func TestBasicMLFCMSerialization(t *testing.T) {
 	fcm := BuildMLBasic()
 	s := NewMLFCMSerializer()
@@ -51,7 +68,7 @@ func TestBasicMLFCMSerialization(t *testing.T) {
 		t.Error("Incorrect number of concepts read")
 	}
 
-	for k,v := range fcm2.concepts {
+	for k, v := range fcm2.concepts {
 		if len(v.layerActivationLevels) != len(fcm.concepts[k].layerActivationLevels) {
 			t.Errorf("Concept id %d has a different number of layer activation levels, expected %d saw %d", k, len(fcm.concepts[k].layerActivationLevels), len(v.layerActivationLevels))
 		}
@@ -76,8 +93,8 @@ func TestBasicMLFCMSerialization(t *testing.T) {
 }
 
 func writeState(t *testing.T, fcm *MultilayerFuzzyCognitiveMap, concepts []string) {
-	for _, conName:= range concepts {
-		agg,_ := fcm.GetActivationLevel(conName)
+	for _, conName := range concepts {
+		agg, _ := fcm.GetActivationLevel(conName)
 		t.Logf("%s aggregate: %.4f", conName, agg)
 		layer2Level, _ := fcm.ReportLayerLevels(conName)
 		s := ""
@@ -88,19 +105,19 @@ func writeState(t *testing.T, fcm *MultilayerFuzzyCognitiveMap, concepts []strin
 }
 
 func BuildMLBasic() *MultilayerFuzzyCognitiveMap {
-	indices := []string {"I", "II"}
+	indices := []string{"I", "II"}
 	dimensions := []string{"levels"}
-	allindices := make([][]string,1)
+	allindices := make([][]string, 1)
 	allindices[0] = indices
 
-	fcm:= NewMultilayerFuzzyCognitiveMap(dimensions, allindices, false, Bivalent)
+	fcm := NewMultilayerFuzzyCognitiveMap(dimensions, allindices, false, Bivalent)
 
 	fcm.AddConceptToLayer("A", "I", float32(1.0), float32(1.0), false)
 	fcm.AddConceptToLayer("B", "I", float32(0.0), float32(0.0), false)
 	fcm.AddConceptToLayer("C", "I", float32(0.0), float32(0.0), false)
 
 	fcm.AddConceptToLayer("A", "II", float32(1.0), float32(1.0), false)
-	fcm.AddConceptToLayer("D", "II", float32(0.0), float32(0.0), false);
+	fcm.AddConceptToLayer("D", "II", float32(0.0), float32(0.0), false)
 	fcm.AddConceptToLayer("E", "II", float32(0.0), float32(0.0), false)
 
 	fcm.AddInfluence("A", "I", "B", "I", float32(1.0))

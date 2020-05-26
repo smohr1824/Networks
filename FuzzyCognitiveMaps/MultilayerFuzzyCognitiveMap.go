@@ -241,6 +241,13 @@ func (c *MultilayerFuzzyCognitiveMap) GetConceptLayerActivationLevel(conceptName
 	}
 }
 
+func (c *MultilayerFuzzyCognitiveMap) Reset() {
+	for _, concept := range c.concepts {
+		concept.reset()
+		c.recomputeAggregateActivationLevelforConcept(concept)
+	}
+}
+
 func (c *MultilayerFuzzyCognitiveMap) GetLayerActivationLevels(coords string) (map[string]float32, error) {
 	if c.model.HasElementaryLayer(coords) {
 		iverts, _ := c.model.VerticesInLayer(coords)
@@ -387,5 +394,19 @@ func (c *MultilayerFuzzyCognitiveMap) recomputeAggregateActivationLevel(conceptN
 		} else {
 			concept.ActivationLevel = c.tfunc(total)
 		}
+	}
+}
+
+func (c *MultilayerFuzzyCognitiveMap) recomputeAggregateActivationLevelforConcept(concept *MultilayerCognitiveConcept) {
+	total := float32(0.0)
+	for _, layer := range concept.GetLayers() {
+		f, _ := concept.GetLayerActivationLevel(layer)
+		total += f
+	}
+
+	if c.modifiedKosko {
+		concept.ActivationLevel = c.tfunc(concept.ActivationLevel + total)
+	} else {
+		concept.ActivationLevel = c.tfunc(total)
 	}
 }

@@ -24,18 +24,18 @@ package FuzzyCognitiveMap
 import "errors"
 
 type MultilayerCognitiveConcept struct {
-	Name string
-	initialValue float32
-	ActivationLevel float32
-	layerActivationLevels map[string] float32
+	Name                  string
+	initialValue          float32
+	ActivationLevel       float32
+	layerActivationLevels map[string]float32
 }
 
 func NewMultilayerCognitiveConcept(name string, initialValue float32, level float32) *MultilayerCognitiveConcept {
-	retVal := new (MultilayerCognitiveConcept)
+	retVal := new(MultilayerCognitiveConcept)
 	retVal.Name = name
 	retVal.initialValue = initialValue
 	retVal.ActivationLevel = level
-	retVal.layerActivationLevels = make(map[string] float32)
+	retVal.layerActivationLevels = make(map[string]float32)
 	return retVal
 }
 
@@ -72,6 +72,12 @@ func (c *MultilayerCognitiveConcept) GetLayerActivationLevel(coords string) (flo
 	}
 }
 
+func (c *MultilayerCognitiveConcept) reset() {
+	for key, _ := range c.layerActivationLevels {
+		c.setLayerLevel(key, c.initialValue)
+	}
+}
+
 func (c *MultilayerCognitiveConcept) setLayerLevel(coords string, level float32) {
-		c.layerActivationLevels[coords] = level
+	c.layerActivationLevels[coords] = level
 }
