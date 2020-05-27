@@ -3,6 +3,12 @@ graph [
 	threshold "bivalent"
 	rule "kosko"
 	node [
+		id 4
+		label E
+		activation 0.0000
+		initial 0.0000
+]
+	node [
 		id 0
 		label A
 		activation 1.0000
@@ -26,12 +32,16 @@ graph [
 		activation 0.0000
 		initial 0.0000
 ]
-	node [
-		id 4
-		label E
-		activation 0.0000
-		initial 0.0000
-]
+	edge [
+		source 4
+		target 3
+		weight 1.000000
+	]
+	edge [
+		source 4
+		target 0
+		weight -1.000000
+	]
 	edge [
 		source 0
 		target 2
@@ -39,13 +49,13 @@ graph [
 	]
 	edge [
 		source 1
-		target 0
-		weight 1.000000
+		target 4
+		weight -1.000000
 	]
 	edge [
 		source 1
-		target 4
-		weight -1.000000
+		target 0
+		weight 1.000000
 	]
 	edge [
 		source 2
@@ -61,15 +71,5 @@ graph [
 		source 3
 		target 1
 		weight 1.000000
-	]
-	edge [
-		source 4
-		target 3
-		weight 1.000000
-	]
-	edge [
-		source 4
-		target 0
-		weight -1.000000
 	]
 ]

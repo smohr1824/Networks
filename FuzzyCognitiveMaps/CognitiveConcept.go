@@ -22,13 +22,13 @@
 package FuzzyCognitiveMap
 
 type CognitiveConcept struct {
-	Name string
-	initialValue float32
+	Name            string
+	initialValue    float32
 	ActivationLevel float32
 }
 
 func NewCognitiveConcept(name string, initialValue float32, level float32) *CognitiveConcept {
-	retVal := new (CognitiveConcept)
+	retVal := new(CognitiveConcept)
 	retVal.Name = name
 	retVal.initialValue = initialValue
 	retVal.ActivationLevel = level
@@ -43,4 +43,18 @@ func (c *CognitiveConcept) GetInitialValue() float32 {
 	return c.initialValue
 }
 
+func (c *CognitiveConcept) GetName() string {
+	return c.Name
+}
 
+func (c *CognitiveConcept) SetName(name string) {
+	c.Name = name
+}
+
+func (c *CognitiveConcept) GetActivationLevel() float32 {
+	return c.ActivationLevel
+}
+
+func (c *CognitiveConcept) SetActivationLevel(level float32) {
+	c.ActivationLevel = level
+}
