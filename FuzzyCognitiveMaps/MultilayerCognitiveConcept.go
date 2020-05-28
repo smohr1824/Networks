@@ -82,14 +82,6 @@ func (c *MultilayerCognitiveConcept) setLayerLevel(coords string, level float32)
 	c.layerActivationLevels[coords] = level
 }
 
-func (c *MultilayerCognitiveConcept) LayerActivationLevels() []ILayerActivationLevel {
-	retVal := make([]ILayerActivationLevel, c.LayerCount())
-	i := 0
-	for coords, actLvl := range c.layerActivationLevels {
-		retVal[i] = NewLayerActivationLevel(coords, actLvl)
-	}
-	return retVal
-}
 func (c *MultilayerCognitiveConcept) GetName() string {
 	return c.Name
 }
